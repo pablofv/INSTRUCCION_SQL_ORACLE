@@ -20,17 +20,22 @@ create or replace package body est_paquete as
                 1, /* -> finalizo originalmente está en 1 (quiere decir en trámite) y luego si la considero salida actualizo a 0 que es fuera de trámite */
                 ID_CAMBIO_ASIGNACION_EXP, null, -- por ahora no voy a poner de donde vienen los datos
                 0,
-                systimestamp, v_numero_de_ejecucion, id_cam
-        from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, case when id_secretaria is null then c.id_oficina else c.id_secretaria end order by FECHA_ASIGNACION desc) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
+                v_inicio, v_numero_de_ejecucion, id_cam
+        from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION desc) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
                      e.id_expediente idexp,
                      e.ANIO_EXPEDIENTE anio,
                      e.NUMERO_EXPEDIENTE numExp,
-                     case when id_secretaria is null then c.id_oficina else c.id_secretaria end id_juzgado,
+                     est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) id_juzgado,
                      c.FECHA_ASIGNACION,
                      c.CODIGO_TIPO_CAMBIO_ASIGNACION codigo,
                      e.ID_OBJETO_JUICIO objeto,
                      c.ID_CAMBIO_ASIGNACION_EXP
-        from CAMBIO_ASIGNACION_EXP c 
+              from (select c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
+                    from CAMBIO_ASIGNACION_EXP c1
+                    union all
+                    select a.ID_EXPEDIENTE, a.ID_OFICINA, a.id_secretaria, a.FECHA_actuacion, ee.codigo_estado_expediente, a.ID_actuacion_EXP, a.status
+                    from actuacion_exp a join estado_Expediente ee on a.id_estado_expediente = ee.id_estado_expediente
+                    where ee.codigo_estado_expediente = 'REI') c
               JOIN EXPEDIENTE e on e.status = 0 and e.ID_EXPEDIENTE = c.ID_EXPEDIENTE and e.NATURALEZA_EXPEDIENTE in ('P')
               JOIN OFICINA o on c.ID_OFICINA = o.ID_OFICINA
               where c.status = 0
@@ -59,9 +64,10 @@ create or replace package body est_paquete as
                       /* que representa un ingreso a TO para el primer expediente, pero el sistema les da distintos id, y me sirve para dar fin a */
                       /* la causa "madre" */
                       select 1 
-                      from expediente x join actuacion_exp a on x.id_expediente = a.id_expediente
+                      --from expediente x join actuacion_exp a on x.id_expediente = a.id_expediente
+                      from expediente x join actuacion_exp a on (x.id_expediente = a.id_expediente or x.id_expediente_origen = a.id_expediente)
                       join estado_expediente ee on a.id_estado_expediente = ee.id_estado_expediente
-                      where e.ta_idexp = x.ID_EXPEDIENTE_ORIGEN 
+                      where e.ta_idexp in(x.ID_EXPEDIENTE_ORIGEN, x.id_expediente) 
                       and   ee.CODIGO_ESTADO_EXPEDIENTE in ('ETO')
                       and   a.FECHA_ACTUACION > e.TA_FECHA
                       and   a.fecha_actuacion < v_fechahasta);
