@@ -234,7 +234,7 @@ create or replace package body est_paquete as
         end loop;
         close cursor_salidos;
         if filaActual = 0 then
-            DBMS_OUTPUT.put_line('filaActual: ' || filaActual); -- No había filas
+            inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso); -- No había filas
         else
             resultado := f_gestiona_ultima_salida(reg => reg, regAnt => regant, id_camara => id_cam, finDePeriodo => v_fechaHasta, v_FECHA_DE_EJECUCION => v_inicio, nroFila  => filaActual);
         end if; -- filaActual = 0
