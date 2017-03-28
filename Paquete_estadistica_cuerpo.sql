@@ -236,7 +236,7 @@ create or replace package body est_paquete as
         if filaActual = 0 then
             inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso); -- No había filas
         else
-            resultado := f_gestiona_ultima_salida(reg => reg, regAnt => regant, id_camara => id_cam, finDePeriodo => v_fechaHasta, v_FECHA_DE_EJECUCION => v_inicio, nroFila  => filaActual);
+            resultado := f_gestiona_ultima_salida(reg => null, regAnt => regant, id_camara => id_cam, finDePeriodo => v_fechaHasta, v_FECHA_DE_EJECUCION => v_inicio, nroFila  => filaActual);
         end if; -- filaActual = 0
         v_fin := systimestamp;
         inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
