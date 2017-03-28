@@ -1,9 +1,9 @@
 create or replace package body est_paquete_instruccion as
 
-    procedure calcular_estadistica(desde in timestamp default to_timestamp('01/01/2008', 'dd/mm/yyyy'), hasta in timestamp, recalculo varchar2 default 'N') as
+    procedure calcular_estadistica_instr(desde in timestamp default to_timestamp('01/01/2008', 'dd/mm/yyyy'), hasta in timestamp, recalculo varchar2 default 'N') as
       error_yaFueCalculado exception; -- excepcion para cuando quiero calcular algo que ya está calculado
       hay_registros_anteriores int;
-      v_proceso varchar2(30) := 'calcular_estadistica';
+      v_proceso varchar2(30) := 'calcular_estadistica_instr';
       hayEstadisticaAnterior int;
     begin
         select nvl(count(*), 0) into hay_registros_anteriores from est_fecha_de_procesos WHERE CAMARA = N_CAMARA;
@@ -28,6 +28,7 @@ create or replace package body est_paquete_instruccion as
             est_paquete.reingresados(v_fechaDesde => desde, v_fechahasta => hasta, id_cam => N_CAMARA);
             --ELIMINAMOS TODO LO QUE NO SEA UN MOVIMIENTO DE INSTRUCCIÓN
             dejarSoloInstruccion;
+            est_paquete.agrego_delito(id_cam => N_CAMARA);
             est_paquete.calcula_salidos(finPeriodo => hasta, id_cam => N_CAMARA);
         end if;
 
@@ -36,7 +37,7 @@ create or replace package body est_paquete_instruccion as
           est_paquete.inserta_error(m_error => 'ESTADÍSTICA YA CALCULADA', nombre_proceso => v_proceso);
       when others then
           est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
-    end calcular_estadistica;
+    end calcular_estadistica_instr;
 
     procedure dejarSoloInstruccion is
         v_proceso varchar2(30) := 'dejarSoloInstruccion';
