@@ -64,7 +64,6 @@ create or replace package body est_paquete as
                       /* que representa un ingreso a TO para el primer expediente, pero el sistema les da distintos id, y me sirve para dar fin a */
                       /* la causa "madre" */
                       select 1 
-                      --from expediente x join actuacion_exp a on x.id_expediente = a.id_expediente
                       from expediente x join actuacion_exp a on (x.id_expediente = a.id_expediente or x.id_expediente_origen = a.id_expediente)
                       join estado_expediente ee on a.id_estado_expediente = ee.id_estado_expediente
                       where e.ta_idexp in(x.ID_EXPEDIENTE_ORIGEN, x.id_expediente) 
@@ -107,7 +106,6 @@ create or replace package body est_paquete as
               e.id_expediente idexp,
               e.ANIO_EXPEDIENTE anio,
               e.NUMERO_EXPEDIENTE numExp,
-              --case when id_secretaria is null then c.id_oficina else c.id_secretaria end id_juzgado,
               est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) id_juzgado,
               c.FECHA_ASIGNACION,
               c.CODIGO_TIPO_CAMBIO_ASIGNACION codigo,
