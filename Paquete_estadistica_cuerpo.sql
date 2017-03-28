@@ -28,7 +28,7 @@ create or replace package body est_paquete as
                      est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) id_juzgado,
                      c.FECHA_ASIGNACION,
                      c.CODIGO_TIPO_CAMBIO_ASIGNACION codigo,
-                     e.ID_OBJETO_JUICIO objeto,
+                     null objeto,
                      c.ID_CAMBIO_ASIGNACION_EXP
               from (select c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
                     from CAMBIO_ASIGNACION_EXP c1
@@ -111,7 +111,7 @@ create or replace package body est_paquete as
               est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) id_juzgado,
               c.FECHA_ASIGNACION,
               c.CODIGO_TIPO_CAMBIO_ASIGNACION codigo,
-              e.ID_OBJETO_JUICIO objeto,
+              null objeto,
               c.ID_CAMBIO_ASIGNACION_EXP
               from (select c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
                     from CAMBIO_ASIGNACION_EXP c1
@@ -169,7 +169,7 @@ create or replace package body est_paquete as
               est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) id_juzgado,
               c.FECHA_ASIGNACION,
               c.CODIGO_TIPO_CAMBIO_ASIGNACION codigo,
-              e.ID_OBJETO_JUICIO objeto,
+              null objeto,
               c.ID_CAMBIO_ASIGNACION_EXP
               from (select c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
                     from CAMBIO_ASIGNACION_EXP c1
