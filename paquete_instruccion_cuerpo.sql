@@ -27,9 +27,7 @@ create or replace package body est_paquete_instruccion as
             est_paquete.ingresados(V_FECHADESDE => desde, V_FECHAHASTA => hasta, id_cam => N_CAMARA);
             est_paquete.reingresados(v_fechaDesde => desde, v_fechahasta => hasta, id_cam => N_CAMARA);
             --ELIMINAMOS TODO LO QUE NO SEA UN MOVIMIENTO DE INSTRUCCIÓN
-        --    reingresadosDeActuacion(f_desde => desde, f_hasta => hasta);
             dejarSoloInstruccion;
-            --reingresadosDeActuacion(f_desde => desde, f_hasta => hasta);
             est_paquete.calcula_salidos(finPeriodo => hasta, id_cam => N_CAMARA);
         end if;
 
@@ -39,38 +37,6 @@ create or replace package body est_paquete_instruccion as
       when others then
           est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
     end calcular_estadistica;
-
-    procedure reingresadosDeActuacion(f_desde in timestamp, f_hasta in timestamp) is
-        v_proceso varchar2(30) := 'reingresadosDeActuacion';
-    begin
-        INSERT INTO LEX100MAESTRAS.EST_TOTAL_A(TA_IDEXP, TA_RN, TA_ANIO_EXP, TA_NUMERO_EXP, TA_OFICINA, TA_FECHA, TA_CODIGO, TA_OBJETO,
-                                               TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
-                                               TA_IDCAMBIO, TA_TABLAORIGEN,
-                                               TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
-                                               TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_CAMARA)
-        select a.id_expediente, (select nvl(max(ta_rn), 1) 
-                                 from est_total_a ta
-                                 where    ta.ta_idexp = a.id_expediente
-                                 and      ta_camara = N_CAMARA
-                                 and      TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion) +
-                                 row_number() over(partition by a.id_expediente, a.id_oficina order by a.fecha_actuacion) rn, e.anio_expediente, e.numero_expediente, a.id_oficina, a.FECHA_ACTUACION, ee.codigo_estado_expediente, e.id_objeto_juicio,
-                1,
-                a.id_actuacion_exp, 'ACTUACION_EXP',
-                2,
-                systimestamp, est_paquete.v_numero_de_ejecucion, N_CAMARA
-        from actuacion_exp a join expediente e on a.id_expediente = e.id_expediente
-                             join estado_expediente ee on a.id_estado_expediente = ee.id_estado_expediente
-        where ee.codigo_estado_expediente = 'REI'
-        and   trunc(a.fecha_actuacion) between f_desde and f_hasta
-        and   exists(select 1
-                     from est_total_a ta
-                     where  ta.ta_idexp = a.id_expediente
-                     and    ta_camara = N_CAMARA
-                     and    TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion);
-    exception
-        when others then
-            est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
-    end reingresadosDeActuacion;
 
     procedure dejarSoloInstruccion is
         v_proceso varchar2(30) := 'dejarSoloInstruccion';
