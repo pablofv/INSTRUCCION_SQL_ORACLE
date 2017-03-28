@@ -197,6 +197,34 @@ create or replace package body est_paquete as
     end reingresados;
 
 /***************************************************/
+/*                  AGREGO_DELITO                  */
+/***************************************************/
+
+    procedure agrego_delito(id_cam in int) is
+      v_proceso varchar2(30) := 'agrego_delito';
+      v_inicio timestamp := systimestamp;
+      v_fin timestamp;
+    begin
+        update est_total_a
+        set ta_objeto = nvl((select id_delito
+                             from (select ROW_NUMBER() over(partition by id_expediente order by id_delito_expediente) n_fila, id_delito, id_expediente
+                                   from delito_expediente delito) delito
+                             where   delito.id_expediente = ta_idexp
+                             and     n_fila = 1
+                             and    ta_camara = id_cam
+                             and    ta_numero_de_ejecucion = est_paquete.v_numero_de_ejecucion), -1);
+        commit;
+        v_fin := systimestamp;
+        inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
+    exception
+        when others then
+          rollback;
+          inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
+          v_fin := systimestamp;
+          inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
+    end agrego_delito;
+
+/***************************************************/
 /*                 CALCULA_SALIDOS                 */
 /***************************************************/
 

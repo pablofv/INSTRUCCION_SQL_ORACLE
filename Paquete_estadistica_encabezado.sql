@@ -44,6 +44,7 @@ create or replace package est_paquete as
     procedure saldo_al_inicio(v_fechahasta in timestamp, id_cam in int);
     procedure ingresados(v_fechaDesde in timestamp, v_fechahasta in timestamp, id_cam in int);
     procedure reingresados(v_fechaDesde in timestamp, v_fechahasta in timestamp, id_cam in int);
+    procedure agrego_delito(id_cam in int);
     procedure calcula_salidos(finPeriodo in timestamp, id_cam in number);
     function f_gestiona_salidas(reg in cursor_Salidos%rowtype, regAnt in cursor_Salidos%rowtype, id_camara in number, finDePeriodo in timestamp, v_FECHA_DE_EJECUCION in timestamp, nroFila in int) return int;
     function f_busca_la_salida(idexp in int, fechaDesde in timestamp, fechaHasta in timestamp, oficina in int, id_cam in number, reg in cursor_Salidos%rowtype, regAnt in cursor_Salidos%rowtype, filaActual in int, fechaDelProceso in timestamp) return int;
