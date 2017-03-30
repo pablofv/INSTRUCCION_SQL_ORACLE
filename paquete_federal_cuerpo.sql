@@ -1,27 +1,40 @@
 create or replace package body est_paquete_federal as
 
-    procedure calcular_estadistica2(desde in timestamp, hasta in timestamp, recalculo varchar2 default 'N') as
-      cantidad_reg_anteriores int;
+    procedure calcular_estadistica_federal(desde in timestamp default to_timestamp('01/01/2008', 'dd/mm/yyyy'), hasta in timestamp, recalculo varchar2 default 'N') is
+      error_yaFueCalculado exception; -- excepcion para cuando quiero calcular algo que ya está calculado
+      hay_registros_anteriores int;
+      v_proceso varchar2(30) := 'calcular_estadistica_federal';
+      hayEstadisticaAnterior int;
     begin
-        select nvl(count(*), 0) into cantidad_reg_anteriores from est_fecha_de_procesos;
+        select nvl(count(*), 0) into hay_registros_anteriores from est_fecha_de_procesos WHERE CAMARA = N_CAMARA;
 
-        if recalculo = 'S' or (upper(recalculo) = 'N' and cantidad_reg_anteriores = 0)then
-            insert into est_fecha_de_procesos(fecha) values (sysdate);
+        if upper(recalculo) = 'S' or (upper(recalculo) = 'N' and hay_registros_anteriores = 0)then
+            insert into est_fecha_de_procesos(fecha, camara) values (sysdate, N_CAMARA);
         end if;
 
         select max(n_ejecucion) into est_paquete.v_numero_de_ejecucion from est_fecha_de_procesos;
 
-        select nvl(count(*), 0) into cantidad_reg_anteriores
+        select nvl(count(*), 0) into hayEstadisticaAnterior
         from est_total_a
-        where ta_fecha < desde
-        and TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
+        where ta_fecha between desde and hasta
+        and   ta_camara = N_CAMARA
+        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
 
-        if cantidad_reg_anteriores = 0 then
-          est_paquete.saldo_al_inicio(v_fechahasta => desde, id_cam => 8);
+        if hayEstadisticaAnterior > 0 then
+            raise error_yaFueCalculado;
+        else
+            if hay_registros_anteriores = 0 then
+              est_paquete.saldo_al_inicio(v_fechahasta => desde, id_cam => N_CAMARA);
+            end if;
+            est_paquete.ingresados(V_FECHADESDE => desde, V_FECHAHASTA => hasta, id_cam => N_CAMARA);
+            est_paquete.reingresados(v_fechaDesde => desde, v_fechahasta => hasta, id_cam => N_CAMARA);
+            est_paquete.agrego_delito(id_cam => N_CAMARA);
+            est_paquete.calcula_salidos(finPeriodo => hasta, id_cam => N_CAMARA);
         end if;
-
-        est_paquete.ingresados(V_FECHADESDE => desde, V_FECHAHASTA => hasta, id_cam => 8);
-        est_paquete.reingresados(v_fechaDesde => desde, v_fechahasta => hasta, id_cam => 8);
-        est_paquete.calcula_salidos(finPeriodo => hasta, id_cam => 8);
-    end calcular_estadistica2;
+    exception
+      when error_yaFueCalculado then
+          est_paquete.inserta_error(m_error => 'ESTADÍSTICA YA CALCULADA', nombre_proceso => v_proceso);
+      when others then
+          est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
+    end calcular_estadistica_federal;
 end est_paquete_federal;
