@@ -1,26 +1,11 @@
 create or replace package body est_paquete_instruccion as
 
-    procedure calcular_estadistica_instr(desde in timestamp default to_timestamp('01/01/2008', 'dd/mm/yyyy'), hasta in timestamp, recalculo varchar2 default 'N') as
-      error_yaFueCalculado exception; -- excepcion para cuando quiero calcular algo que ya está calculado
-      hay_registros_anteriores int;
+    procedure calcular_estadistica_instr(desde in timestamp default to_timestamp('01/01/2008', 'dd/mm/yyyy'), hasta in timestamp default to_timestamp('31/12/2008', 'dd/mm/yyyy'), recalcular varchar2 default 'N') as
+      error_yaFueCalculado exception; -- excepcion para cuando quiero calcular una estadística que ya está calculada
       v_proceso varchar2(30) := 'calcular_estadistica_instr';
-      hayEstadisticaAnterior int;
     begin
-        select nvl(count(*), 0) into hay_registros_anteriores from est_fecha_de_procesos WHERE CAMARA = N_CAMARA;
-
-        if upper(recalculo) = 'S' or (upper(recalculo) = 'N' and hay_registros_anteriores = 0)then
-            insert into est_fecha_de_procesos(fecha, camara) values (sysdate, N_CAMARA);
-        end if;
-
-        select max(n_ejecucion) into est_paquete.v_numero_de_ejecucion from est_fecha_de_procesos;
-
-        select nvl(count(*), 0) into hayEstadisticaAnterior
-        from est_total_a
-        where ta_fecha between desde and hasta
-        and   ta_camara = N_CAMARA
-        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
-
-        if hayEstadisticaAnterior > 0 then
+        if EST_PAQ_EJECUTAR.ejecutar_proceso(f_desde => desde, f_hasta => hasta, CAMARA => N_CAMARA, quieroRecalcular => recalcular) = 1 then
+            /* 1-> error, 0-> correcto */
             raise error_yaFueCalculado;
         else
             /* En instrucción empezaremos sin expedientes en trámite */
