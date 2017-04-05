@@ -2,9 +2,10 @@ create or replace package body est_paquete_instruccion as
 
     procedure calcular_estadistica_instr(desde in timestamp default to_timestamp('01/01/2008', 'dd/mm/yyyy'), hasta in timestamp default to_timestamp('31/12/2008', 'dd/mm/yyyy'), recalcular varchar2 default 'N') as
       error_yaFueCalculado exception; -- excepcion para cuando quiero calcular una estadística que ya está calculada
+      hay_registros_anteriores int; -- Variable para saber si ya tengo datos anteriores, y determinar si ejecuto el procecidiento de existentes iniciales.
       v_proceso varchar2(30) := 'calcular_estadistica_instr';
     begin
-        if EST_PAQ_EJECUTAR.ejecutar_proceso(f_desde => desde, f_hasta => hasta, CAMARA => N_CAMARA, quieroRecalcular => recalcular) = 1 then
+        if EST_PAQ_EJECUTAR.ejecutar_proceso(f_desde => desde, f_hasta => hasta, CAMARA => N_CAMARA, quieroRecalcular => recalcular, datos_antes_del_inicio => hay_registros_anteriores) = 1 then
             /* 1-> error, 0-> correcto */
             raise error_yaFueCalculado;
         else
