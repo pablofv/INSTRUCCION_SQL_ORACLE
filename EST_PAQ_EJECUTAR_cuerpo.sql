@@ -1,6 +1,6 @@
 CREATE OR REPLACE PACKAGE body EST_PAQ_EJECUTAR AS 
-    function ejecutar_proceso(f_desde in timestamp, f_hasta in timestamp, CAMARA in int, quieroRecalcular varchar2) return int is
-        datos_antes_del_inicio int;
+    function ejecutar_proceso(f_desde in timestamp, f_hasta in timestamp, CAMARA in int, quieroRecalcular varchar2, datos_antes_del_inicio in out int) return int is
+     --   datos_antes_del_inicio int;
         datos_despues_del_inicio int;
         v_proceso varchar2(30) := 'ejecutar_proceso';
         v_retorno int;
