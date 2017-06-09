@@ -21,6 +21,9 @@ CREATE OR REPLACE PACKAGE body EST_PAQ_EJECUTAR AS
         elsif upper(quieroRecalcular) = 'N' and datos_despues_del_inicio = 0 and datos_antes_del_inicio > 0 then
           v_retorno := 0;
         else
+          if upper(quieroRecalcular) = 'S' then -- Si estoy recalculando, indico que no hay datos anteriores aunque los haya, porque en tal caso serían de otra estadística.
+              datos_antes_del_inicio := 0;
+          end if;
           insert into est_fecha_de_procesos(fecha, camara) values (sysdate, CAMARA);
           v_retorno := 0; -- o bien quiero recalcular o no quiero recalcular y no hay registros previos, seguimos con el proceso
         end if;
