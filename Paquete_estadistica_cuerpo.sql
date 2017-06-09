@@ -481,4 +481,13 @@ create or replace package body est_paquete as
       when others then
         rollback;
     end inserta_duracion_procesos;
+
+/***************************************************/
+/*              DEJARMATERIASPENALES               */
+/***************************************************/
+
+    procedure dejarMateriasPenales is
+    begin
+        null;
+    end dejarMateriasPenales;
 end est_paquete;
