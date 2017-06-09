@@ -56,5 +56,5 @@ create or replace package est_paquete as
     procedure inserta_error(m_error in varchar2, nombre_proceso in varchar2);
     function f_gestiona_ultima_salida(reg in cursor_Salidos%rowtype, regAnt in cursor_Salidos%rowtype, id_camara in number, finDePeriodo in timestamp, v_FECHA_DE_EJECUCION in timestamp, nroFila in int) return int;
     procedure inserta_duracion_procesos(camara in int, nombre in varchar2, inicio in timestamp, fin in timestamp);
-    procedure dejarMateriasPenales(camara in int);
+    procedure dejarMateriasPenales;
 end est_paquete;
