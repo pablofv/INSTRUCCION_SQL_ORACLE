@@ -15,16 +15,17 @@ create or replace package body est_paquete as
                                            TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
                                            TA_IDCAMBIO, TA_TABLAORIGEN,
                                            TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
-                                           TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_CAMARA)
+                                           TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_MATERIA, TA_CAMARA)
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                 1, /* -> finalizo originalmente está en 1 (quiere decir en trámite) y luego si la considero salida actualizo a 0 que es fuera de trámite */
                 ID_CAMBIO_ASIGNACION_EXP, null, -- por ahora no voy a poner de donde vienen los datos
                 0,
-                v_inicio, v_numero_de_ejecucion, id_cam
+                v_inicio, v_numero_de_ejecucion, id_materia, id_cam
         from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION desc) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
                      e.id_expediente idexp,
                      e.ANIO_EXPEDIENTE anio,
                      e.NUMERO_EXPEDIENTE numExp,
+                     e.id_materia,
                      est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) id_juzgado,
                      c.FECHA_ASIGNACION,
                      c.CODIGO_TIPO_CAMBIO_ASIGNACION codigo,
@@ -96,16 +97,17 @@ create or replace package body est_paquete as
                                                TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
                                                TA_IDCAMBIO, TA_TABLAORIGEN,
                                                TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
-                                               TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_CAMARA)
+                                               TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_MATERIA, TA_CAMARA)
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                1, /* -> finalizo originalmente está en 1 (quiere decir en trámite) y luego si la considero salida actualizo a 0 que es fuera de trámite */
                ID_CAMBIO_ASIGNACION_EXP, null,
                1, /* -> ingresados */
-               v_inicio, v_numero_de_ejecucion, id_cam
+               v_inicio, v_numero_de_ejecucion, id_materia, id_cam
         from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION ) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
               e.id_expediente idexp,
               e.ANIO_EXPEDIENTE anio,
               e.NUMERO_EXPEDIENTE numExp,
+              e.id_materia,
               est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) id_juzgado,
               c.FECHA_ASIGNACION,
               c.CODIGO_TIPO_CAMBIO_ASIGNACION codigo,
@@ -153,16 +155,17 @@ create or replace package body est_paquete as
                                                TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
                                                TA_IDCAMBIO, TA_TABLAORIGEN,
                                                TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
-                                               TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_CAMARA)
+                                               TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_MATERIA, TA_CAMARA)
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                1,
                ID_CAMBIO_ASIGNACION_EXP, null,
                2,
-               v_inicio, v_numero_de_ejecucion, id_cam
+               v_inicio, v_numero_de_ejecucion, id_materia, id_cam
         from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION ) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
               e.id_expediente idexp,
               e.ANIO_EXPEDIENTE anio,
               e.NUMERO_EXPEDIENTE numExp,
+              e.id_materia,
               --case when id_secretaria is null then c.id_oficina else c.id_secretaria end id_juzgado,
               est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) id_juzgado,
               c.FECHA_ASIGNACION,
