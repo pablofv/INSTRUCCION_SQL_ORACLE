@@ -486,8 +486,15 @@ create or replace package body est_paquete as
 /*              DEJARMATERIASPENALES               */
 /***************************************************/
 
-    procedure dejarMateriasPenales is
+    procedure dejarMateriasPenales(camara in int) is
     begin
-        null;
+        /* BORRO LOS EXPEDIENTES DE CÓRDOBA -O LA CÁMARA QUE QUIERA- QUE NO SEAN DE MATERIA PENAL -LAS INCLUÍDAS EN EL VECTOR MP */
+        delete from est_total_a
+        where ta_camara = camara
+        and   ta_materia not in (mp(1), mp(2), mp(3), mp(4));
+        commit;
+    exception
+      when others then
+        rollback;
     end dejarMateriasPenales;
 end est_paquete;
