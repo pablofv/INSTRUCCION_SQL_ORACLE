@@ -29,8 +29,11 @@ create or replace package est_paquete as
         TA_TIPO_DE_DATO	NUMBER(1,0),
         TA_FECHA_PROCESO timestamp,
         TA_CAMARA NUMBER(2));
+    /* Vector con las materias penales */
+    type materias IS VARRAY(5) OF INTEGER;
+    mp materias := materias(8, 9, 11, 13);-- si cambian la cantidad de materias hay que cambiar el índice donde se usa el vector  
   
-  /* Cursor para recorrer todos los ingresos y buscar salidas entre ellos */
+    /* Cursor para recorrer todos los ingresos y buscar salidas entre ellos */
     cursor cursor_salidos(n_ejecucion int, id_camara int) is
     select TA_IDEXP, TA_RN, TA_ANIO_EXP, TA_NUMERO_EXP, TA_OFICINA, TA_FECHA, TA_CODIGO, TA_OBJETO, TA_FINALIZO,
            TA_IDCAMBIO, TA_TABLAORIGEN, TA_TIPO_DE_DATO, TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION
@@ -53,4 +56,5 @@ create or replace package est_paquete as
     procedure inserta_error(m_error in varchar2, nombre_proceso in varchar2);
     function f_gestiona_ultima_salida(reg in cursor_Salidos%rowtype, regAnt in cursor_Salidos%rowtype, id_camara in number, finDePeriodo in timestamp, v_FECHA_DE_EJECUCION in timestamp, nroFila in int) return int;
     procedure inserta_duracion_procesos(camara in int, nombre in varchar2, inicio in timestamp, fin in timestamp);
+    procedure dejarMateriasPenales;
 end est_paquete;
