@@ -23,6 +23,29 @@ CREATE TABLE EST_TOTAL_A(
     CONSTRAINT CF_TOTALA_FECHAPROCESO FOREIGN KEY (TA_NUMERO_ESTADISTICA) REFERENCES EST_FECHA_DE_PROCESOS(NUMERO_ESTADISTICA)
     );
 
+/*  FALTA LA EXPLICACIÓN DEL DESENCADENADOR */
+create or replace trigger tr_inserta_clave_TOTAL_A
+for insert
+on EST_TOTAL_A
+compound trigger
+      filas int := 0;
+      function Cuenta_Cantidad return int is
+          PRAGMA AUTONOMOUS_TRANSACTION;
+          cant int := 0;
+      begin
+          select nvl(max(TA_CLAVE), 0) into cant from EST_TOTAL_A;
+          return cant;
+      end Cuenta_Cantidad;
+  before each row is 
+  begin
+      if :new.TA_CLAVE is not null then
+          raise_application_error(-20023,'No se puede asignar manualmente un valor a la columna TA_CLAVE.');
+      end if;
+      filas := filas + 1;
+      :new.TA_CLAVE := Cuenta_Cantidad + filas;
+  end before each row;
+end tr_inserta_clave_TOTAL_A;
+
 
 CREATE TABLE EST_SALIDOS(
     SAL_CLAVE INT,
@@ -44,6 +67,28 @@ CREATE TABLE EST_SALIDOS(
     CONSTRAINT CF_SALIDOS_A_TOTALA FOREIGN KEY (SAL_REFERENCIA_INGRESADO) REFERENCES EST_TOTAL_A(TA_CLAVE),
     CONSTRAINT CF_SALIDOS_FECHAPROCESO FOREIGN KEY (SAL_NUMERO_ESTADISTICA) REFERENCES EST_FECHA_DE_PROCESOS(NUMERO_ESTADISTICA)
     );
+
+create or replace trigger tr_inserta_clave_SALIDOS
+for insert
+on EST_SALIDOS
+compound trigger
+      filas int := 0;
+      function Cuenta_Cantidad return int is
+          PRAGMA AUTONOMOUS_TRANSACTION;
+          cant int := 0;
+      begin
+          select nvl(max(SAL_CLAVE), 0) into cant from EST_SALIDOS;
+          return cant;
+      end Cuenta_Cantidad;
+  before each row is 
+  begin
+      if :new.SAL_CLAVE is not null then
+          raise_application_error(-20023,'No se puede asignar manualmente un valor a la columna SAL_CLAVE.');
+      end if;
+      filas := filas + 1;
+      :new.SAL_CLAVE := Cuenta_Cantidad + filas;
+  end before each row;
+end tr_inserta_clave_SALIDOS;
 
 
 CREATE TABLE EST_LOG(
