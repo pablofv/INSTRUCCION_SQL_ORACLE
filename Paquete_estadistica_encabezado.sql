@@ -14,7 +14,7 @@ create or replace package est_paquete as
         tipo_de_dato number(1));
   
     /* Tipo para guardar los registros del cursor del total a */
-    type reg_cursor_tota is record(
+  /*  type reg_cursor_tota is record(
         TA_IDEXP	NUMBER(10,0),
         TA_RN	NUMBER(3,0),
         TA_ANIO_EXP	NUMBER(10,0),
@@ -30,7 +30,7 @@ create or replace package est_paquete as
         TA_FECHA_PROCESO timestamp,
         TA_NUMERO_ESTADISTICA NUMBER(38,0),
         TA_MATERIA NUMBER(38,0),
-        TA_CAMARA NUMBER(2));
+        TA_CAMARA NUMBER(2));*/
     /* Vector con las materias penales */
     type materias IS VARRAY(5) OF INTEGER;
     mp materias := materias(8, 9, 11, 13);-- si cambian la cantidad de materias hay que cambiar el índice donde se usa el vector  
