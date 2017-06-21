@@ -13,12 +13,12 @@ create or replace package body est_paquete as
         para luego a todos esos registros buscarle un código de salida posterior */
         INSERT INTO LEX100MAESTRAS.EST_TOTAL_A(TA_IDEXP, TA_RN, TA_ANIO_EXP, TA_NUMERO_EXP, TA_OFICINA, TA_FECHA, TA_CODIGO, TA_OBJETO,
                                            TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
-                                           TA_IDCAMBIO, TA_TABLAORIGEN,
+                                           TA_IDCAMBIO, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
                                            TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
                                            TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_MATERIA, TA_CAMARA)
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                 1, /* -> finalizo originalmente está en 1 (quiere decir en trámite) y luego si la considero salida actualizo a 0 que es fuera de trámite */
-                ID_CAMBIO_ASIGNACION_EXP, null, -- por ahora no voy a poner de donde vienen los datos
+                ID_CAMBIO_ASIGNACION_EXP, tabladesde,
                 0,
                 v_inicio, v_numero_de_ejecucion, id_materia, id_cam
         from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION desc) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
@@ -30,11 +30,12 @@ create or replace package body est_paquete as
                      c.FECHA_ASIGNACION,
                      c.CODIGO_TIPO_CAMBIO_ASIGNACION codigo,
                      null objeto,
+                     c.tabladesde,
                      c.ID_CAMBIO_ASIGNACION_EXP
-              from (select c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
+              from (select 1 tabladesde, c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
                     from CAMBIO_ASIGNACION_EXP c1
                     union all
-                    select a.ID_EXPEDIENTE, a.ID_OFICINA, a.id_secretaria, a.FECHA_actuacion, ee.codigo_estado_expediente, a.ID_actuacion_EXP, a.status
+                    select 2, a.ID_EXPEDIENTE, a.ID_OFICINA, a.id_secretaria, a.FECHA_actuacion, ee.codigo_estado_expediente, a.ID_actuacion_EXP, a.status
                     from actuacion_exp a join estado_Expediente ee on a.id_estado_expediente = ee.id_estado_expediente
                     where ee.codigo_estado_expediente = 'REI') c
               JOIN EXPEDIENTE e on e.status = 0 and e.ID_EXPEDIENTE = c.ID_EXPEDIENTE and e.NATURALEZA_EXPEDIENTE in ('P')
@@ -95,12 +96,12 @@ create or replace package body est_paquete as
            expediente y oficina, los rn=1 son los primeros ingresos a cada una */
         INSERT INTO LEX100MAESTRAS.EST_TOTAL_A(TA_IDEXP, TA_RN, TA_ANIO_EXP, TA_NUMERO_EXP, TA_OFICINA, TA_FECHA, TA_CODIGO, TA_OBJETO,
                                                TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
-                                               TA_IDCAMBIO, TA_TABLAORIGEN,
+                                               TA_IDCAMBIO, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
                                                TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
                                                TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_MATERIA, TA_CAMARA)
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                1, /* -> finalizo originalmente está en 1 (quiere decir en trámite) y luego si la considero salida actualizo a 0 que es fuera de trámite */
-               ID_CAMBIO_ASIGNACION_EXP, null,
+               ID_CAMBIO_ASIGNACION_EXP, tabladesde,
                1, /* -> ingresados */
                v_inicio, v_numero_de_ejecucion, id_materia, id_cam
         from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION ) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
@@ -112,11 +113,12 @@ create or replace package body est_paquete as
               c.FECHA_ASIGNACION,
               c.CODIGO_TIPO_CAMBIO_ASIGNACION codigo,
               null objeto,
+              c.tabladesde,
               c.ID_CAMBIO_ASIGNACION_EXP
-              from (select c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
+              from (select 1 tabladesde, c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
                     from CAMBIO_ASIGNACION_EXP c1
                     union all
-                    select a.ID_EXPEDIENTE, a.ID_OFICINA, a.id_secretaria, a.FECHA_actuacion, ee.codigo_estado_expediente, a.ID_actuacion_EXP, a.status
+                    select 2, a.ID_EXPEDIENTE, a.ID_OFICINA, a.id_secretaria, a.FECHA_actuacion, ee.codigo_estado_expediente, a.ID_actuacion_EXP, a.status
                     from actuacion_exp a join estado_Expediente ee on a.id_estado_expediente = ee.id_estado_expediente
                     where ee.codigo_estado_expediente = 'REI') c
               JOIN EXPEDIENTE e on e.status = 0 and e.ID_EXPEDIENTE = c.ID_EXPEDIENTE and e.NATURALEZA_EXPEDIENTE in ('P')
@@ -153,12 +155,12 @@ create or replace package body est_paquete as
            expediente y oficina, los rn>1 son los siguientes ingresos a cada oficina, y por lo tanto los considero reingresos */
         INSERT INTO LEX100MAESTRAS.EST_TOTAL_A(TA_IDEXP, TA_RN, TA_ANIO_EXP, TA_NUMERO_EXP, TA_OFICINA, TA_FECHA, TA_CODIGO, TA_OBJETO,
                                                TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
-                                               TA_IDCAMBIO, TA_TABLAORIGEN,
+                                               TA_IDCAMBIO, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
                                                TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
                                                TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_MATERIA, TA_CAMARA)
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                1,
-               ID_CAMBIO_ASIGNACION_EXP, null,
+               ID_CAMBIO_ASIGNACION_EXP, tabladesde,
                2,
                v_inicio, v_numero_de_ejecucion, id_materia, id_cam
         from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION ) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
@@ -171,11 +173,12 @@ create or replace package body est_paquete as
               c.FECHA_ASIGNACION,
               c.CODIGO_TIPO_CAMBIO_ASIGNACION codigo,
               null objeto,
+              c.tabladesde,
               c.ID_CAMBIO_ASIGNACION_EXP
-              from (select c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
+              from (select 1 tabladesde, c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
                     from CAMBIO_ASIGNACION_EXP c1
                     union all
-                    select a.ID_EXPEDIENTE, a.ID_OFICINA, a.id_secretaria, a.FECHA_actuacion, ee.codigo_estado_expediente, a.ID_actuacion_EXP, a.status
+                    select 2, a.ID_EXPEDIENTE, a.ID_OFICINA, a.id_secretaria, a.FECHA_actuacion, ee.codigo_estado_expediente, a.ID_actuacion_EXP, a.status
                     from actuacion_exp a join estado_Expediente ee on a.id_estado_expediente = ee.id_estado_expediente
                     where ee.codigo_estado_expediente = 'REI') c 
               JOIN EXPEDIENTE e on e.status = 0 and e.ID_EXPEDIENTE = c.ID_EXPEDIENTE and e.NATURALEZA_EXPEDIENTE in ('P')
