@@ -13,14 +13,14 @@ create or replace package body est_paquete as
         para luego a todos esos registros buscarle un código de salida posterior */
         INSERT INTO LEX100MAESTRAS.EST_TOTAL_A(TA_IDEXP, TA_RN, TA_ANIO_EXP, TA_NUMERO_EXP, TA_OFICINA, TA_FECHA, TA_CODIGO, TA_OBJETO,
                                            TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
-                                           TA_IDCAMBIO, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
+                                           TA_IDTABLAORIGEN, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
                                            TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
-                                           TA_FECHA_PROCESO, TA_NUMERO_ESTADISTICA, TA_MATERIA, TA_CAMARA)
+                                           TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_NUMERO_ESTADISTICA, TA_MATERIA, TA_CAMARA)
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                 1, /* -> finalizo originalmente está en 1 (quiere decir en trámite) y luego si la considero salida actualizo a 0 que es fuera de trámite */
                 ID_CAMBIO_ASIGNACION_EXP, tabladesde,
                 0,
-                v_inicio, v_numero_de_ejecucion, id_materia, id_cam
+                v_inicio, v_numero_de_ejecucion, v_numero_estadistica, id_materia, id_cam
         from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION desc) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
                      e.id_expediente idexp,
                      e.ANIO_EXPEDIENTE anio,
@@ -96,14 +96,14 @@ create or replace package body est_paquete as
            expediente y oficina, los rn=1 son los primeros ingresos a cada una */
         INSERT INTO LEX100MAESTRAS.EST_TOTAL_A(TA_IDEXP, TA_RN, TA_ANIO_EXP, TA_NUMERO_EXP, TA_OFICINA, TA_FECHA, TA_CODIGO, TA_OBJETO,
                                                TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
-                                               TA_IDCAMBIO, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
+                                               TA_IDTABLAORIGEN, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
                                                TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
-                                               TA_FECHA_PROCESO, TA_NUMERO_ESTADISTICA, TA_MATERIA, TA_CAMARA)
+                                               TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_NUMERO_ESTADISTICA, TA_MATERIA, TA_CAMARA)
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                1, /* -> finalizo originalmente está en 1 (quiere decir en trámite) y luego si la considero salida actualizo a 0 que es fuera de trámite */
                ID_CAMBIO_ASIGNACION_EXP, tabladesde,
                1, /* -> ingresados */
-               v_inicio, v_numero_de_ejecucion, id_materia, id_cam
+               v_inicio, v_numero_de_ejecucion, v_numero_estadistica, id_materia, id_cam
         from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION ) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
               e.id_expediente idexp,
               e.ANIO_EXPEDIENTE anio,
@@ -155,14 +155,14 @@ create or replace package body est_paquete as
            expediente y oficina, los rn>1 son los siguientes ingresos a cada oficina, y por lo tanto los considero reingresos */
         INSERT INTO LEX100MAESTRAS.EST_TOTAL_A(TA_IDEXP, TA_RN, TA_ANIO_EXP, TA_NUMERO_EXP, TA_OFICINA, TA_FECHA, TA_CODIGO, TA_OBJETO,
                                                TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
-                                               TA_IDCAMBIO, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
+                                               TA_IDTABLAORIGEN, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
                                                TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
-                                               TA_FECHA_PROCESO, TA_NUMERO_ESTADISTICA, TA_MATERIA, TA_CAMARA)
+                                               TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_NUMERO_ESTADISTICA, TA_MATERIA, TA_CAMARA)
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                1,
                ID_CAMBIO_ASIGNACION_EXP, tabladesde,
                2,
-               v_inicio, v_numero_de_ejecucion, id_materia, id_cam
+               v_inicio, v_numero_de_ejecucion, v_numero_estadistica, id_materia, id_cam
         from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION ) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
               e.id_expediente idexp,
               e.ANIO_EXPEDIENTE anio,

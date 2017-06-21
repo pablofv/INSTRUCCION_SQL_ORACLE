@@ -37,14 +37,14 @@ create or replace package est_paquete as
   
     /* Cursor para recorrer todos los ingresos y buscar salidas entre ellos */
     cursor cursor_salidos(n_ejecucion int, id_camara int) is
-    select TA_IDEXP, TA_RN, TA_ANIO_EXP, TA_NUMERO_EXP, TA_OFICINA, TA_FECHA, TA_CODIGO, TA_OBJETO, TA_FINALIZO,
-           TA_IDTABLAORIGEN, TA_TABLAORIGEN, TA_TIPO_DE_DATO, TA_FECHA_PROCESO, TA_NUMERO_ESTADISTICA
+    select *
     from EST_TOTAL_A
     where TA_NUMERO_ESTADISTICA = n_ejecucion -- si tengo mas de una ejecución del proceso, quiero la última
     and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
     and   ta_camara = id_camara -- para poder variar la cámara por ejemplo entre instrucción y federal
     order by ta_idexp, ta_fecha;
     v_numero_de_ejecucion int;
+    v_numero_estadistica int;
 
     procedure saldo_al_inicio(v_fechahasta in timestamp, id_cam in int);
     procedure ingresados(v_fechaDesde in timestamp, v_fechahasta in timestamp, id_cam in int);
