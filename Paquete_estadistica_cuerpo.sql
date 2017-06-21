@@ -15,7 +15,7 @@ create or replace package body est_paquete as
                                            TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
                                            TA_IDCAMBIO, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
                                            TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
-                                           TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_MATERIA, TA_CAMARA)
+                                           TA_FECHA_PROCESO, TA_NUMERO_ESTADISTICA, TA_MATERIA, TA_CAMARA)
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                 1, /* -> finalizo originalmente está en 1 (quiere decir en trámite) y luego si la considero salida actualizo a 0 que es fuera de trámite */
                 ID_CAMBIO_ASIGNACION_EXP, tabladesde,
@@ -54,7 +54,7 @@ create or replace package body est_paquete as
         /*y el inicio de dicho año) un código de salida, y a esos los elimino -porque considero que al iniciar el período están fuera de trámite  */
         delete from est_total_a e
         where ta_tipo_de_dato = 0
-        and   TA_NUMERO_DE_EJECUCION = v_numero_de_ejecucion
+        and   TA_NUMERO_ESTADISTICA = v_numero_de_ejecucion
         and   exists (select 1
                       from actuacion_exp a join ESTADO_EXPEDIENTE ee on a.ID_ESTADO_EXPEDIENTE = ee.ID_ESTADO_EXPEDIENTE
                       where e.TA_IDEXP = a.id_expediente
@@ -98,7 +98,7 @@ create or replace package body est_paquete as
                                                TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
                                                TA_IDCAMBIO, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
                                                TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
-                                               TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_MATERIA, TA_CAMARA)
+                                               TA_FECHA_PROCESO, TA_NUMERO_ESTADISTICA, TA_MATERIA, TA_CAMARA)
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                1, /* -> finalizo originalmente está en 1 (quiere decir en trámite) y luego si la considero salida actualizo a 0 que es fuera de trámite */
                ID_CAMBIO_ASIGNACION_EXP, tabladesde,
@@ -157,7 +157,7 @@ create or replace package body est_paquete as
                                                TA_FINALIZO, -- 0 -> fuera de trámite 1 -> en trámite
                                                TA_IDCAMBIO, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
                                                TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
-                                               TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_MATERIA, TA_CAMARA)
+                                               TA_FECHA_PROCESO, TA_NUMERO_ESTADISTICA, TA_MATERIA, TA_CAMARA)
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                1,
                ID_CAMBIO_ASIGNACION_EXP, tabladesde,
@@ -218,7 +218,7 @@ create or replace package body est_paquete as
                              where   delito.id_expediente = ta_idexp
                              and     n_fila = 1
                              and    ta_camara = id_cam
-                             and    ta_numero_de_ejecucion = est_paquete.v_numero_de_ejecucion), -1);
+                             and    TA_NUMERO_ESTADISTICA = est_paquete.v_numero_de_ejecucion), -1);
         commit;
         v_fin := systimestamp;
         inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
@@ -410,7 +410,7 @@ create or replace package body est_paquete as
         ofi := registro.oficina;
         numfila := registro.rn;
         t_d := registro.tipo_de_dato;
-        Numero_ejecucion := regAnt.TA_NUMERO_DE_EJECUCION;
+        Numero_ejecucion := regAnt.TA_NUMERO_ESTADISTICA;
         
         update est_total_a
         set ta_finalizo = 0, TA_FECHA_DE_FINALIZACION = REGISTRO.FECHA
@@ -418,7 +418,7 @@ create or replace package body est_paquete as
         and   ta_oficina = registro.oficina
         and   ta_rn = registro.rn
         and   ta_tipo_de_dato = registro.tipo_de_dato
-        and   TA_NUMERO_DE_EJECUCION = regAnt.TA_NUMERO_DE_EJECUCION;
+        and   TA_NUMERO_ESTADISTICA = regAnt.TA_NUMERO_ESTADISTICA;
         commit;
     exception
       when others then
