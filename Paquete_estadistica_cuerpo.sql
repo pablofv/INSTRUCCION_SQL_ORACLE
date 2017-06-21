@@ -180,7 +180,10 @@ create or replace package body est_paquete as
                     union all
                     select 2, a.ID_EXPEDIENTE, a.ID_OFICINA, a.id_secretaria, a.FECHA_actuacion, ee.codigo_estado_expediente, a.ID_actuacion_EXP, a.status
                     from actuacion_exp a join estado_Expediente ee on a.id_estado_expediente = ee.id_estado_expediente
-                    where ee.codigo_estado_expediente = 'REI') c 
+                    where ee.codigo_estado_expediente = 'REI'
+                    and   not exists (select 1
+                                      from est_total_a ta
+                                      where ta.ta_idtablaorigen = a.id_actuacion_exp)) c 
               JOIN EXPEDIENTE e on e.status = 0 and e.ID_EXPEDIENTE = c.ID_EXPEDIENTE and e.NATURALEZA_EXPEDIENTE in ('P')
               JOIN OFICINA o on c.ID_OFICINA = o.ID_OFICINA
               where c.status = 0
