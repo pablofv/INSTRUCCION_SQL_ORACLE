@@ -1,3 +1,12 @@
+CREATE TABLE est_fecha_de_procesos(
+  FECHA TIMESTAMP(6),
+  N_EJECUCION INT,
+  CAMARA NUMBER(2),
+  NUMERO_ESTADISTICA INT,
+  CONSTRAINT "CP_fechaDeProcesos" PRIMARY KEY ("N_EJECUCION")
+  );
+
+
 CREATE TABLE EST_TOTAL_A(
     TA_CLAVE INT NOT NULL,
     TA_IDEXP NUMBER(10,0) NOT NULL ENABLE,
@@ -18,9 +27,8 @@ CREATE TABLE EST_TOTAL_A(
     TA_MATERIA INT,
     TA_CAMARA NUMBER(2),
     CONSTRAINT CP_TOTAL_A PRIMARY KEY ("TA_CLAVE"),
-    CONSTRAINT UQ_VIEJA_CLAVE_INGRESOS UNIQUE ("TA_IDEXP", "TA_OFICINA", "TA_RN", "TA_TIPO_DE_DATO", "TA_NUMERO_DE_EJECUCION"),
-    CONSTRAINT UQ_ID_TABLA_PROVEEDORA UNIQUE("TA_IDTABLAORIGEN", "TA_TABLAORIGEN"),
-    CONSTRAINT CF_TOTALA_FECHAPROCESO FOREIGN KEY (TA_NUMERO_ESTADISTICA) REFERENCES EST_FECHA_DE_PROCESOS(NUMERO_ESTADISTICA)
+    CONSTRAINT UQ_VIEJA_CLAVE_INGRESOS UNIQUE ("TA_IDEXP", "TA_OFICINA", "TA_RN", "TA_TIPO_DE_DATO", "TA_NUMERO_ESTADISTICA"),
+    CONSTRAINT UQ_ID_TABLA_PROVEEDORA UNIQUE("TA_IDTABLAORIGEN", "TA_TABLAORIGEN")
     );
 
 /*  FALTA LA EXPLICACIÓN DEL DESENCADENADOR */
@@ -29,6 +37,7 @@ for insert
 on EST_TOTAL_A
 compound trigger
       filas int := 0;
+      numero_estadistica int := 0;
       function Cuenta_Cantidad return int is
           PRAGMA AUTONOMOUS_TRANSACTION;
           cant int := 0;
@@ -40,6 +49,10 @@ compound trigger
   begin
       if :new.TA_CLAVE is not null then
           raise_application_error(-20023,'No se puede asignar manualmente un valor a la columna TA_CLAVE.');
+      end if;
+      select nvl(count(*), 0) into numero_estadistica from est_fecha_de_procesos where NUMERO_ESTADISTICA = :new.TA_NUMERO_ESTADISTICA;
+      if (numero_estadistica = 0) then
+          raise_application_error(-20024,'No existe el número de estadística en la tabla est_fecha_de_procesos.');
       end if;
       filas := filas + 1;
       :new.TA_CLAVE := Cuenta_Cantidad + filas;
@@ -63,9 +76,8 @@ CREATE TABLE EST_SALIDOS(
     SAL_RADICACION VARCHAR2(10),
     SAL_REFERENCIA_INGRESADO INT,
     CONSTRAINT CP_SALIDOS PRIMARY KEY (SAL_CLAVE),
-    CONSTRAINT UQ_VIEJA_CLAVE_SALIDOS UNIQUE (SAL_IDEXP, SAL_FECHA, SAL_CODIGO, SAL_OFICINA, SAL_RN, SAL_NUMERO_DE_EJECUCION),
-    CONSTRAINT CF_SALIDOS_A_TOTALA FOREIGN KEY (SAL_REFERENCIA_INGRESADO) REFERENCES EST_TOTAL_A(TA_CLAVE),
-    CONSTRAINT CF_SALIDOS_FECHAPROCESO FOREIGN KEY (SAL_NUMERO_ESTADISTICA) REFERENCES EST_FECHA_DE_PROCESOS(NUMERO_ESTADISTICA)
+    CONSTRAINT UQ_VIEJA_CLAVE_SALIDOS UNIQUE (SAL_IDEXP, SAL_FECHA, SAL_CODIGO, SAL_OFICINA, SAL_RN, SAL_NUMERO_ESTADISTICA),
+    CONSTRAINT CF_SALIDOS_A_TOTALA FOREIGN KEY (SAL_REFERENCIA_INGRESADO) REFERENCES EST_TOTAL_A(TA_CLAVE)
     );
 
 create or replace trigger tr_inserta_clave_SALIDOS
@@ -73,6 +85,7 @@ for insert
 on EST_SALIDOS
 compound trigger
       filas int := 0;
+      numero_estadistica int := 0;
       function Cuenta_Cantidad return int is
           PRAGMA AUTONOMOUS_TRANSACTION;
           cant int := 0;
@@ -84,6 +97,10 @@ compound trigger
   begin
       if :new.SAL_CLAVE is not null then
           raise_application_error(-20023,'No se puede asignar manualmente un valor a la columna SAL_CLAVE.');
+      end if;
+      select nvl(count(*), 0) into numero_estadistica from est_fecha_de_procesos where NUMERO_ESTADISTICA = :new.SAL_NUMERO_ESTADISTICA;
+      if (numero_estadistica = 0) then
+          raise_application_error(-20024,'No existe el número de estadística en la tabla est_fecha_de_procesos.');
       end if;
       filas := filas + 1;
       :new.SAL_CLAVE := Cuenta_Cantidad + filas;
@@ -124,12 +141,7 @@ CREATE TABLE EST_ERRORES(
 	PROCESO VARCHAR2(30 BYTE) NOT NULL,
 	FECHA TIMESTAMP(6) NOT NULL ENABLE);
 
-CREATE TABLE est_fecha_de_procesos(
-  FECHA TIMESTAMP(6),
-  N_EJECUCION INT,
-  CAMARA NUMBER(2),
-  NUMERO_ESTADISTICA INT,
-  CONSTRAINT "CP_fechaDeProcesos" PRIMARY KEY ("N_EJECUCION"));
+
 
 
 create sequence "est_secFechaProceso"
@@ -185,11 +197,11 @@ INSERT INTO EST_CODIGOS_SALIDA (CAMARA, CODIGO) VALUES (9, 'PRE');
 -- Agregó los DROP a las tablas para poder generar nuevamente el modelo
 
 /*
-drop table EST_TOTAL_A;
 drop table EST_SALIDOS;
 drop table EST_LOG;
 drop table EST_DURACION_PROCESO;
 drop table EST_CODIGOS_SALIDA;
 drop table EST_ERRORES;
 drop table est_fecha_de_procesos;
+drop table EST_TOTAL_A;
 */
