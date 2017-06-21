@@ -24,10 +24,12 @@ create or replace package est_paquete as
         TA_CODIGO	VARCHAR2(10 BYTE),
         TA_OBJETO	NUMBER(10,0),
         TA_FINALIZO NUMBER(1,0),
-        TA_IDCAMBIO NUMBER(10,0),
+        TA_IDTABLAORIGEN NUMBER(10,0),
         TA_TABLAORIGEN VARCHAR2(30 BYTE),
         TA_TIPO_DE_DATO	NUMBER(1,0),
         TA_FECHA_PROCESO timestamp,
+        TA_NUMERO_ESTADISTICA NUMBER(38,0),
+        TA_MATERIA NUMBER(38,0),
         TA_CAMARA NUMBER(2));
     /* Vector con las materias penales */
     type materias IS VARRAY(5) OF INTEGER;
@@ -36,9 +38,9 @@ create or replace package est_paquete as
     /* Cursor para recorrer todos los ingresos y buscar salidas entre ellos */
     cursor cursor_salidos(n_ejecucion int, id_camara int) is
     select TA_IDEXP, TA_RN, TA_ANIO_EXP, TA_NUMERO_EXP, TA_OFICINA, TA_FECHA, TA_CODIGO, TA_OBJETO, TA_FINALIZO,
-           TA_IDCAMBIO, TA_TABLAORIGEN, TA_TIPO_DE_DATO, TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION
+           TA_IDTABLAORIGEN, TA_TABLAORIGEN, TA_TIPO_DE_DATO, TA_FECHA_PROCESO, TA_NUMERO_ESTADISTICA
     from EST_TOTAL_A
-    where TA_NUMERO_DE_EJECUCION = n_ejecucion -- si tengo mas de una ejecución del proceso, quiero la última
+    where TA_NUMERO_ESTADISTICA = n_ejecucion -- si tengo mas de una ejecución del proceso, quiero la última
     and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
     and   ta_camara = id_camara -- para poder variar la cámara por ejemplo entre instrucción y federal
     order by ta_idexp, ta_fecha;
