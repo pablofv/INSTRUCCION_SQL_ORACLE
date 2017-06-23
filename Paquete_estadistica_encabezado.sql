@@ -11,7 +11,8 @@ create or replace package est_paquete as
         objeto number(38),
         oficina number(38),
         rn number(38),
-        tipo_de_dato number(1));
+        tipo_de_dato number(1),
+        id_ingresado int);
   
     /* Tipo para guardar los registros del cursor del total a */
   /*  type reg_cursor_tota is record(

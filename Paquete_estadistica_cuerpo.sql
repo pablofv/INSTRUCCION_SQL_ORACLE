@@ -405,8 +405,8 @@ create or replace package body est_paquete as
       Numero_ejecucion int;
       v_proceso varchar2(30) := 'inserta_salida';
     begin
-        insert into est_salidos(SAL_ANIO_EXP, SAL_CODIGO, SAL_FECHA, sal_fechaProceso, SAL_IDEXP, SAL_NUMERO_EXP, SAL_OBJETO, SAL_OFICINA, sal_rn, sal_actuacion, SAL_NUMERO_DE_EJECUCION, sal_numero_estadistica, sal_radicacion)
-        values(registro.anio_exp, registro.codigo, registro.fecha, registro.fecha_Proceso, registro.idexp, registro.numero_exp, registro.objeto, registro.oficina, registro.rn, registro.actuacion, v_numero_de_ejecucion, v_numero_estadistica, registro.radicacion);
+        insert into est_salidos(SAL_ANIO_EXP, SAL_CODIGO, SAL_FECHA, sal_fechaProceso, SAL_IDEXP, SAL_NUMERO_EXP, SAL_OBJETO, SAL_OFICINA, sal_rn, sal_actuacion, SAL_NUMERO_DE_EJECUCION, sal_numero_estadistica, SAL_REFERENCIA_INGRESADO, sal_radicacion)
+        values(registro.anio_exp, registro.codigo, registro.fecha, registro.fecha_Proceso, registro.idexp, registro.numero_exp, registro.objeto, registro.oficina, registro.rn, registro.actuacion, v_numero_de_ejecucion, v_numero_estadistica, registro.id_ingresado, registro.radicacion);
         commit;
         
         idexp := registro.idexp;
