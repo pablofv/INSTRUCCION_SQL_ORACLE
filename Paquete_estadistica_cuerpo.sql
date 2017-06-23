@@ -183,7 +183,8 @@ create or replace package body est_paquete as
                     where ee.codigo_estado_expediente = 'REI'
                     and   not exists (select 1
                                       from est_total_a ta
-                                      where ta.ta_idtablaorigen = a.id_actuacion_exp)) c 
+                                      where ta.ta_idtablaorigen = a.id_actuacion_exp
+                                      and   ta.TA_TABLAORIGEN = 2)) c 
               JOIN EXPEDIENTE e on e.status = 0 and e.ID_EXPEDIENTE = c.ID_EXPEDIENTE and e.NATURALEZA_EXPEDIENTE in ('P')
               JOIN OFICINA o on c.ID_OFICINA = o.ID_OFICINA
               where c.status = 0
