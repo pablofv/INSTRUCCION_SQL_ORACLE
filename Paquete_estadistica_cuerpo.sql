@@ -358,6 +358,7 @@ create or replace package body est_paquete as
         r_insertSalido.objeto := regAnt.ta_objeto;
         r_insertSalido.oficina := regAnt.ta_oficina;
         r_insertSalido.rn := regAnt.ta_rn;
+        r_insertSalido.id_ingresado := regAnt.ta_clave;
         r_insertSalido.tipo_de_dato := regAnt.ta_tipo_de_dato;
 
         inserta_salida(registro => r_insertSalido, reg => reg, regAnt => regAnt, id_actuacion => id_act, filaActual => filaActual, fechaProceso => fechaDelProceso);
@@ -381,6 +382,7 @@ create or replace package body est_paquete as
                 r_insertSalido.objeto := regAnt.ta_objeto;
                 r_insertSalido.oficina := regAnt.ta_oficina;
                 r_insertSalido.rn := regAnt.ta_rn;
+                r_insertSalido.id_ingresado := regAnt.ta_clave;
                 r_insertSalido.tipo_de_dato := regAnt.ta_tipo_de_dato;
                 inserta_salida(registro => r_insertSalido, reg => reg, regAnt => regAnt, id_actuacion => id_act, filaActual => filaActual, fechaProceso => fechaDelProceso);
             end if; --(reg = regAnt)
