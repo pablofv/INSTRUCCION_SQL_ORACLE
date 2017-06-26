@@ -146,7 +146,7 @@ CREATE TABLE EST_ERRORES(
 
 
 
-create sequence "est_secFechaProceso"
+create sequence est_secFechaProceso
   start with 1
   increment by 1
   minvalue 1
@@ -157,7 +157,7 @@ CREATE OR REPLACE TRIGGER "disparador_fechaProcesosCP"
   BEFORE INSERT ON est_fecha_de_procesos
   FOR EACH ROW
 BEGIN
-    select "est_secFechaProceso".nextval into :NEW.N_EJECUCION from dual;
+    select est_secFechaProceso.nextval into :NEW.N_EJECUCION from dual;
 END;
 
 /*
