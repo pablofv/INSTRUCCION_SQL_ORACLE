@@ -225,3 +225,16 @@ drop table EST_ERRORES;
 drop table est_fecha_de_procesos;
 drop table EST_TOTAL_A;
 */
+
+
+create or replace trigger dis_copia_log
+after insert on est_total_a
+begin
+  insert into est_total_a_log(TA_ANIO_EXP, TA_CAMARA, TA_CLAVE, TA_CODIGO, TA_FECHA, TA_FECHA_DE_FINALIZACION, TA_FECHA_PROCESO, TA_FINALIZO,
+                              TA_IDEXP, TA_IDTABLAORIGEN, TA_MATERIA, TA_NUMERO_DE_EJECUCION, TA_NUMERO_ESTADISTICA, TA_NUMERO_EXP, TA_OBJETO,
+                              TA_OFICINA, TA_RN, TA_TABLAORIGEN, TA_TIPO_DE_DATO)
+  select TA_ANIO_EXP, TA_CAMARA, TA_CLAVE, TA_CODIGO, TA_FECHA, TA_FECHA_DE_FINALIZACION, TA_FECHA_PROCESO, TA_FINALIZO,
+         TA_IDEXP, TA_IDTABLAORIGEN, TA_MATERIA, TA_NUMERO_DE_EJECUCION, TA_NUMERO_ESTADISTICA, TA_NUMERO_EXP, TA_OBJETO,
+         TA_OFICINA, TA_RN, TA_TABLAORIGEN, TA_TIPO_DE_DATO
+  from est_total_a;
+end dis_copia_log;
