@@ -421,11 +421,7 @@ create or replace package body est_paquete as
         
         update est_total_a
         set ta_finalizo = 0, TA_FECHA_DE_FINALIZACION = REGISTRO.FECHA
-        where ta_idexp = registro.idexp
-        and   ta_oficina = registro.oficina
-        and   ta_rn = registro.rn
-        and   ta_tipo_de_dato = registro.tipo_de_dato
-        and   TA_NUMERO_ESTADISTICA = regAnt.TA_NUMERO_ESTADISTICA;
+        where ta_clave = registro.id_ingresado ;
 
         if(sql%rowcount) > 1 then
             inserta_error(m_error => 'EL UPDATE ACTUALIZÓ MAS DE UNA FILA. LA CANTIDAD ES: ' || sql%rowcount || 'LA CLAVE ES: ' || registro.id_ingresado, nombre_proceso => v_proceso);
