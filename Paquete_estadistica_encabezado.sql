@@ -37,10 +37,10 @@ create or replace package est_paquete as
     mp materias := materias(8, 9, 11, 13);-- si cambian la cantidad de materias hay que cambiar el índice donde se usa el vector  
   
     /* Cursor para recorrer todos los ingresos y buscar salidas entre ellos */
-    cursor cursor_salidos(n_ejecucion int, id_camara int) is
+    cursor cursor_salidos(n_estadistica int, id_camara int) is
     select *
     from EST_TOTAL_A
-    where TA_NUMERO_ESTADISTICA = n_ejecucion -- si tengo mas de una ejecución del proceso, quiero la última
+    where TA_NUMERO_ESTADISTICA = n_estadistica -- si tengo mas de una ejecución del proceso, quiero la última
     and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
     and   ta_camara = id_camara -- para poder variar la cámara por ejemplo entre instrucción y federal
     order by ta_idexp, ta_fecha;
