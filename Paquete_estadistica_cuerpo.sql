@@ -54,7 +54,7 @@ create or replace package body est_paquete as
         /*y el inicio de dicho año) un código de salida, y a esos los elimino -porque considero que al iniciar el período están fuera de trámite  */
         delete from est_total_a e
         where ta_tipo_de_dato = 0
-        and   TA_NUMERO_ESTADISTICA = v_numero_de_ejecucion
+        and   TA_numero_de_ejecucion = v_numero_de_ejecucion
         and   exists (select 1
                       from actuacion_exp a join ESTADO_EXPEDIENTE ee on a.ID_ESTADO_EXPEDIENTE = ee.ID_ESTADO_EXPEDIENTE
                       where e.TA_IDEXP = a.id_expediente
@@ -222,7 +222,7 @@ create or replace package body est_paquete as
                              where   delito.id_expediente = ta_idexp
                              and     n_fila = 1
                              and    ta_camara = id_cam
-                             and    TA_NUMERO_ESTADISTICA = est_paquete.v_numero_de_ejecucion), -1);
+                             and    TA_numero_de_ejecucion = est_paquete.v_numero_de_ejecucion), -1);
         commit;
         v_fin := systimestamp;
         inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
@@ -257,7 +257,7 @@ create or replace package body est_paquete as
         v_fechaHasta := finPeriodo + 1;
         DBMS_OUTPUT.put_line(v_fechaHasta);
 
-        open cursor_salidos(v_numero_de_ejecucion, id_cam);
+        open cursor_salidos(v_numero_estadistica, id_cam);
         loop
             fetch cursor_salidos into reg;
             exit when cursor_salidos%NOTFOUND or cursor_salidos%NOTFOUND is null;
