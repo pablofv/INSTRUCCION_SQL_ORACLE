@@ -426,6 +426,10 @@ create or replace package body est_paquete as
         and   ta_rn = registro.rn
         and   ta_tipo_de_dato = registro.tipo_de_dato
         and   TA_NUMERO_ESTADISTICA = regAnt.TA_NUMERO_ESTADISTICA;
+
+        if(sql%rowcount) > 1 then
+            inserta_error(m_error => 'EL UPDATE ACTUALIZÓ MAS DE UNA FILA. LA CANTIDAD ES: ' || sql%rowcount || 'LA CLAVE ES: ' || registro.id_ingresado, nombre_proceso => v_proceso);
+        end if;
         commit;
     exception
       when others then
