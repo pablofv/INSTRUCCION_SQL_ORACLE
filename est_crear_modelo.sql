@@ -14,7 +14,7 @@ declare
         BULK COLLECT INTO v_tablas
         from user_objects
         where upper(object_name) in ('EST_SALIDOS', 'EST_LOG', 'EST_DURACION_PROCESO', 'EST_CODIGOS_SALIDA',
-                                     'EST_ERRORES', 'EST_FECHA_DE_PROCESOS', 'EST_TOTAL_A', 'EST_SECFECHAPROCESO')
+                                     'EST_ERRORES', 'EST_EJECUCIONES', 'EST_TOTAL_A', 'EST_SECFECHAPROCESO')
         order by Object_Id desc;
         if v_tablas.last > 0 then -- encontró objetos creados
             ultimo_elemento := v_tablas.last;
@@ -32,13 +32,15 @@ declare
 begin
 -- Primero borro el modelo
     est_proc_borrar_modelo;
-
-    execute immediate 'CREATE TABLE est_fecha_de_procesos(FECHA TIMESTAMP(6),
-                                                          N_EJECUCION INT,
-                                                          CAMARA NUMBER(2),
-                                                          NUMERO_ESTADISTICA INT,
-                                                          CONSTRAINT "CP_fechaDeProcesos" PRIMARY KEY ("N_EJECUCION")
-                                                          )';
+--est_fecha_de_procesos
+    execute immediate 'CREATE TABLE EST_EJECUCIONES(FECHA_PROCESO TIMESTAMP(6),
+                                                    N_EJECUCION INT,
+                                                    CAMARA NUMBER(2),
+                                                    NUMERO_ESTADISTICA INT NOT NULL,
+                                                    FECHA_DESDE TIMESTAMP,
+                                                    FECHA_HASTA TIMESTAMP,
+                                                    CONSTRAINT "CP_fechaDeProcesos" PRIMARY KEY ("N_EJECUCION")
+                                                    )';
 
     execute immediate  'CREATE TABLE EST_TOTAL_A(TA_CLAVE INT NOT NULL,
                                                  TA_IDEXP NUMBER(10,0) NOT NULL ENABLE,
@@ -85,10 +87,6 @@ begin
                             if :new.TA_CLAVE is not null then
                                 raise_application_error(-20023,''No se puede asignar manualmente un valor a la columna TA_CLAVE.'');
                             end if;
-                            select nvl(count(*), 0) into numero_estadistica from est_fecha_de_procesos where NUMERO_ESTADISTICA = :new.TA_NUMERO_ESTADISTICA;
-                            if (numero_estadistica = 0) then
-                                raise_application_error(-20024,''No existe el número de estadística en la tabla est_fecha_de_procesos.'');
-                            end if;
                             filas := filas + 1;
                             :new.TA_CLAVE := Cuenta_Cantidad + filas;
                         end before each row;
@@ -131,10 +129,6 @@ begin
                               if :new.SAL_CLAVE is not null then
                                   raise_application_error(-20023,''No se puede asignar manualmente un valor a la columna SAL_CLAVE.'');
                               end if;
-                              select nvl(count(*), 0) into numero_estadistica from est_fecha_de_procesos where NUMERO_ESTADISTICA = :new.SAL_NUMERO_ESTADISTICA;
-                              if (numero_estadistica = 0) then
-                                  raise_application_error(-20024,''No existe el número de estadística en la tabla est_fecha_de_procesos.'');
-                              end if;
                               filas := filas + 1;
                               :new.SAL_CLAVE := Cuenta_Cantidad + filas;
                           end before each row;
@@ -174,7 +168,7 @@ begin
                        nocycle';
 
     execute immediate 'CREATE OR REPLACE TRIGGER "disparador_fechaProcesosCP"
-                          BEFORE INSERT ON est_fecha_de_procesos
+                          BEFORE INSERT ON EST_EJECUCIONES
                           FOR EACH ROW
                        BEGIN
                           select est_secFechaProceso.nextval into :NEW.N_EJECUCION from dual;
@@ -234,5 +228,6 @@ begin
     commit;
 exception
     when others then
+      --DBMS_OUTPUT.PUT_LINE(DBMS_UTILITY.format_error_stack);
       est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
 end est_proc_crear_modelo;
