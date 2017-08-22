@@ -223,7 +223,8 @@ create or replace package body est_paquete as
                              where   delito.id_expediente = ta_idexp
                              and     n_fila = 1
                              and    ta_camara = id_cam
-                             and    TA_numero_de_ejecucion = est_paquete.v_numero_de_ejecucion), -1);
+                             and    TA_numero_de_ejecucion = est_paquete.v_numero_de_ejecucion), -1)
+        where   ta_numero_de_ejecucion = est_paquete.v_numero_de_ejecucion;
         commit;
         v_fin := systimestamp;
         inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
@@ -344,6 +345,14 @@ create or replace package body est_paquete as
                     and   c.fecha_asignacion between fechaDesde and fechaHasta
                     and   est_busca_juzgado(c.id_oficina) = est_busca_juzgado(oficina) --est_busca_juzgado(oficina)
                     and   c.CODIGO_TIPO_CAMBIO_ASIGNACION in ('ETO')
+                    union all
+                    select null, i.id_informacion, i.fecha_informacion, ti.codigo_tipo_informacion, i.id_expediente
+                    from informacion i join tipo_informacion ti on i.id_tipo_informacion = ti.id_tipo_informacion
+                                       join actuacion_exp a on a.id_informacion = i.id_informacion
+                    where i.id_expediente = idexp
+                    and   i.fecha_informacion between fechaDesde and fechaHasta
+                    and   est_busca_juzgado(a.id_oficina) = est_busca_juzgado(oficina)
+                    and   i.id_tipo_informacion = 241
                     ) cambio_actuacion
               ) r -- de resultado
         where numero_fila = 1;
