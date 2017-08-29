@@ -17,7 +17,6 @@ create or replace package body est_paquete_instruccion as
             est_paquete.agrego_delito(id_cam => N_CAMARA);
             est_paquete.calcula_salidos(finPeriodo => hasta, id_cam => N_CAMARA);
         end if;
-
     exception
       when error_yaFueCalculado then
           est_paquete.inserta_error(m_error => 'ESTADÍSTICA YA CALCULADA', nombre_proceso => v_proceso);
@@ -28,13 +27,23 @@ create or replace package body est_paquete_instruccion as
     procedure dejarSoloInstruccion is
         v_proceso varchar2(30) := 'dejarSoloInstruccion';
     begin
-        /* ELIMINO LOS EXPEDIENTES QUE NO SON DE LAS OFICINAS DE INSTRUCCIÓN */
+        /* ELIMINO LOS EXPEDIENTES QUE NO SON DE LAS OFICINAS DE INSTRUCCIÓN HASTA EL AÑO 2012 INCLUSIVE */
         delete from est_total_a ta
         where not exists (select id_oficina
                           from oficina o
                           where ta.ta_oficina = o.id_oficina
-                          and   o.sigla_cedulas = 'CI');
+                          and   o.sigla_cedulas = 'CI')
+        and   extract(year from ta_fecha) < 2013;
 
+        /* PARA 2013 EN ADELANTE, BORRARÉ TODO LO QUE NO SEA INSTRUCCIÓN, ROGATORIAS, MENORES O CORRECCIONAL */
+        delete from est_total_a ta
+        where not exists (select id_oficina
+                          from oficina o
+                          where ta.ta_oficina = o.id_oficina
+                          and   o.sigla_cedulas in ('CI', 'CR','JNM', 'RO'))
+        and   extract(year from ta_fecha) >= 2013;
+
+        /* ELIMINO AQUELLOS EXPEDIENTES QUE TIENEN AÑO DE CAUSA ANTERIOR A 2008, YA QUE LO CONSIDERABA ASÍ EN INSTRUCCIÓN CON SQLSERVER */
         delete from est_total_a
         where   ta_anio_exp < 2008;
         commit;
