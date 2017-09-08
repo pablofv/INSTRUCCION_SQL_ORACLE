@@ -1,30 +1,16 @@
 create or replace package body est_paquete_federal as
 
-    procedure calcular_estadistica_federal(desde in timestamp default to_timestamp('01/01/2008', 'dd/mm/yyyy'), hasta in timestamp, recalculo varchar2 default 'N') is
+    procedure calcular_estadistica_federal(desde in timestamp default to_timestamp('01/01/2008', 'dd/mm/yyyy'), hasta in timestamp, recalcular varchar2 default 'N') is
       error_yaFueCalculado exception; -- excepcion para cuando quiero calcular algo que ya está calculado
       hay_registros_anteriores int;
       v_proceso varchar2(30) := 'calcular_estadistica_federal';
-      hayEstadisticaAnterior int;
     begin
-        select nvl(count(*), 0) into hay_registros_anteriores from est_fecha_de_procesos WHERE CAMARA = N_CAMARA;
-
-        if upper(recalculo) = 'S' or (upper(recalculo) = 'N' and hay_registros_anteriores = 0)then
-            insert into est_fecha_de_procesos(fecha, camara) values (sysdate, N_CAMARA);
-        end if;
-
-        select max(n_ejecucion) into est_paquete.v_numero_de_ejecucion from est_fecha_de_procesos;
-
-        select nvl(count(*), 0) into hayEstadisticaAnterior
-        from est_total_a
-        where ta_fecha between desde and hasta
-        and   ta_camara = N_CAMARA
-        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
-
-        if hayEstadisticaAnterior > 0 then
+        if EST_PAQ_EJECUTAR.ejecutar_proceso(f_desde => desde, f_hasta => hasta, CAMARA => N_CAMARA, quieroRecalcular => recalcular, datos_antes_del_inicio => hay_registros_anteriores) = 1 then
+            /* 1-> error, 0-> correcto */
             raise error_yaFueCalculado;
         else
             if hay_registros_anteriores = 0 then
-              est_paquete.saldo_al_inicio(v_fechahasta => desde, id_cam => N_CAMARA);
+                est_paquete.saldo_al_inicio(v_fechahasta => desde, id_cam => N_CAMARA);
             end if;
             est_paquete.ingresados(V_FECHADESDE => desde, V_FECHAHASTA => hasta, id_cam => N_CAMARA);
             est_paquete.reingresados(v_fechaDesde => desde, v_fechahasta => hasta, id_cam => N_CAMARA);
