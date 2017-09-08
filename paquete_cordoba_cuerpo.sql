@@ -4,7 +4,6 @@ create or replace package body est_paquete_cordoba as
       error_yaFueCalculado exception; -- excepcion para cuando quiero calcular algo que ya está calculado
       hay_registros_anteriores int;
       v_proceso varchar2(30) := 'calcular_estadistica_cordoba';
-  --    hayEstadisticaAnterior int;
     begin
         if EST_PAQ_EJECUTAR.ejecutar_proceso(f_desde => desde, f_hasta => hasta, CAMARA => N_CAMARA, quieroRecalcular => recalcular, datos_antes_del_inicio => hay_registros_anteriores) = 1 then
             /* 1-> error, 0-> correcto */
