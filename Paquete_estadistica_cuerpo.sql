@@ -344,7 +344,7 @@ create or replace package body est_paquete as
                     where idexp in (e.id_expediente_origen, e.id_expediente)
                     and   c.fecha_asignacion between fechaDesde and fechaHasta
                     and   est_busca_juzgado(c.id_oficina) = est_busca_juzgado(oficina) --est_busca_juzgado(oficina)
-                    and   c.CODIGO_TIPO_CAMBIO_ASIGNACION in ('ETO')
+                  --  and   c.CODIGO_TIPO_CAMBIO_ASIGNACION in ('ETO')
                     union all
                     select null, i.id_informacion, i.fecha_informacion, ti.codigo_tipo_informacion, i.id_expediente
                     from informacion i join tipo_informacion ti on i.id_tipo_informacion = ti.id_tipo_informacion
