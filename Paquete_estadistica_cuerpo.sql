@@ -337,14 +337,14 @@ create or replace package body est_paquete as
                     where idexp in (x.ID_EXPEDIENTE_ORIGEN, x.id_expediente)
                     and   ee.CODIGO_ESTADO_EXPEDIENTE in ('ETO')
                     and   a.fecha_actuacion between fechaDesde and fechaHasta
-                    and   est_busca_juzgado(a.id_oficina) = est_busca_juzgado(oficina) --est_busca_juzgado(oficina)
+                  --  and   est_busca_juzgado(a.id_oficina) = est_busca_juzgado(oficina) --est_busca_juzgado(oficina)
                     union all
                     select c.tipo_radicacion, c.id_cambio_asignacion_exp, c.fecha_asignacion, c.codigo_tipo_cambio_asignacion as codigo, case when e.ID_EXPEDIENTE_ORIGEN is null then e.id_expediente else e.id_expediente_origen end
                     from cambio_asignacion_exp c join expediente e on c.id_expediente = e.id_expediente
                     where idexp in (e.id_expediente_origen, e.id_expediente)
                     and   c.fecha_asignacion between fechaDesde and fechaHasta
-                    and   est_busca_juzgado(c.id_oficina) = est_busca_juzgado(oficina) --est_busca_juzgado(oficina)
-                  --  and   c.CODIGO_TIPO_CAMBIO_ASIGNACION in ('ETO')
+                  --  and   est_busca_juzgado(c.id_oficina) = est_busca_juzgado(oficina) --est_busca_juzgado(oficina)
+                    and   c.CODIGO_TIPO_CAMBIO_ASIGNACION in ('ETO')
                     union all
                     select null, i.id_informacion, i.fecha_informacion, ti.codigo_tipo_informacion, i.id_expediente
                     from informacion i join tipo_informacion ti on i.id_tipo_informacion = ti.id_tipo_informacion
@@ -353,6 +353,12 @@ create or replace package body est_paquete as
                     and   i.fecha_informacion between fechaDesde and fechaHasta
                     and   est_busca_juzgado(a.id_oficina) = est_busca_juzgado(oficina)
                     and   i.id_tipo_informacion = 241
+                    union all
+                    select c.tipo_radicacion, c.id_cambio_asignacion_exp, c.fecha_asignacion, c.codigo_tipo_cambio_asignacion as codigo, c.id_expediente
+                    from cambio_asignacion_exp c
+                    where c.id_expediente = idexp
+                    and   c.fecha_asignacion > fechaDesde
+                    and   c.fecha_asignacion <= fechaHasta
                     ) cambio_actuacion
               ) r -- de resultado
         where numero_fila = 1;
