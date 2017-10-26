@@ -1,5 +1,4 @@
 create or replace package body est_paquete_instruccion as
-
     procedure calcular_estadistica_instr(desde in timestamp default to_timestamp('01/01/2008', 'dd/mm/yyyy'), hasta in timestamp default to_timestamp('31/12/2008', 'dd/mm/yyyy'), recalcular varchar2 default 'N') as
       error_yaFueCalculado exception; -- excepcion para cuando quiero calcular una estadística que ya está calculada
       hay_registros_anteriores int; -- Variable para saber si ya tengo datos anteriores, y determinar si ejecuto el procecidiento de existentes iniciales.
@@ -33,6 +32,7 @@ create or replace package body est_paquete_instruccion as
                           from oficina o
                           where ta.ta_oficina = o.id_oficina
                           and   o.sigla_cedulas = 'CI')
+        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion
         and   extract(year from ta_fecha) < 2013;
 
         /* PARA 2013 EN ADELANTE, BORRARÉ TODO LO QUE NO SEA INSTRUCCIÓN, ROGATORIAS, MENORES O CORRECCIONAL */
@@ -41,11 +41,13 @@ create or replace package body est_paquete_instruccion as
                           from oficina o
                           where ta.ta_oficina = o.id_oficina
                           and   o.sigla_cedulas in ('CI', 'CR','JNM', 'RO'))
+        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion
         and   extract(year from ta_fecha) >= 2013;
 
         /* ELIMINO AQUELLOS EXPEDIENTES QUE TIENEN AÑO DE CAUSA ANTERIOR A 2008, YA QUE LO CONSIDERABA ASÍ EN INSTRUCCIÓN CON SQLSERVER */
         delete from est_total_a
-        where   ta_anio_exp < 2008;
+        where   ta_anio_exp < 2008
+        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
         commit;
     exception
         when others then
