@@ -33,6 +33,12 @@ begin
 -- Primero borro el modelo
     est_proc_borrar_modelo;
 --est_fecha_de_procesos
+
+    -- Tabla para usar de variable, con un número que representa el número de estadística actual. Comenzará en 0, para que al hacer la primer estadística, se incremente a uno.
+    execute immediate 'CREATE TABLE EST_VARIABLE_ESTADISTICA(VE_VALOR INT
+                                                             )';
+    execute immediate 'INSERT INTO EST_VARIABLE_ESTADISTICA (VE_VALOR) VALUES (0)';
+
     execute immediate 'CREATE TABLE EST_EJECUCIONES(FECHA_PROCESO TIMESTAMP(6),
                                                     N_EJECUCION INT,
                                                     CAMARA NUMBER(2),
