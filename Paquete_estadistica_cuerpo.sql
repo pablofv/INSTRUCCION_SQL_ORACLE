@@ -358,7 +358,7 @@ create or replace package body est_paquete as
                     from cambio_asignacion_exp c
                     where c.id_expediente = idexp
                     and   c.fecha_asignacion > fechaDesde
-                    and   c.fecha_asignacion <= fechaHasta
+                    and   c.fecha_asignacion < fechaHasta
                     ) cambio_actuacion
               ) r -- de resultado
         where numero_fila = 1;
