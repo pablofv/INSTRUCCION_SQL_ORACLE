@@ -48,6 +48,15 @@ create or replace package body est_paquete_instruccion as
         delete from est_total_a
         where   ta_anio_exp < 2008
         and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
+
+        /* ELIMINO LAS FALSAS ASIGNACIONES HECHAS PARA QUE LOS JUZGADOS CORRECCCIONALES CON SU NUEVA DENOMINACIÓN, PUEDAN TRABAJAR SUS ANTIGUAS CAUSAS */
+        delete from est_total_a a
+        where  exists (select c.id_cambio_asignacion_exp
+                       from cambio_asignacion_exp c
+                       where  c.id_cambio_asignacion_exp = A.ta_idtablaorigen
+                       and    fecha_asignacion = to_timestamp('01/03/2017 12:00:00,000000000 AM', 'DD/MM/YYYY HH12:MI:SS,FF AM')
+                       and    comentarios = 'POR ACORDADA 1/2017 CSJN'
+                       );
         commit;
     exception
         when others then
