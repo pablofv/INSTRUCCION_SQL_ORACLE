@@ -24,6 +24,8 @@ create or replace package body est_paquete_instruccion as
 
     procedure dejarSoloInstruccion is
         v_proceso varchar2(30) := 'dejarSoloInstruccion';
+        v_inicio timestamp := systimestamp;
+        v_fin timestamp;
     begin
         /* ELIMINO LOS EXPEDIENTES QUE NO SON DE LAS OFICINAS DE INSTRUCCIÓN HASTA EL AÑO 2012 INCLUSIVE */
         delete from est_total_a ta
@@ -58,6 +60,8 @@ create or replace package body est_paquete_instruccion as
                        )
         and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
         commit;
+        v_fin := systimestamp;
+        est_paquete.inserta_duracion_procesos(camara => 9, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
     exception
         when others then
             est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
