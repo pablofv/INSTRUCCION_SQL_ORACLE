@@ -1,12 +1,11 @@
 create or replace package body est_paquete_instruccion as
-    procedure calcular_estadistica_instr(desde in timestamp default to_timestamp('01/01/2008', 'dd/mm/yyyy'), hasta in timestamp default to_timestamp('31/12/2008', 'dd/mm/yyyy'), recalcular varchar2 default 'N') as
-      error_yaFueCalculado exception; -- excepcion para cuando quiero calcular una estadística que ya está calculada
-      hay_registros_anteriores int; -- Variable para saber si ya tengo datos anteriores, y determinar si ejecuto el procecidiento de existentes iniciales.
+    procedure calcular_estadistica_instr(desde in timestamp default to_timestamp('01/01/2008', 'dd/mm/yyyy'), hasta in timestamp default to_timestamp('31/12/2008', 'dd/mm/yyyy')) as
+      error_enEjecutarProceso exception; -- excepcion para cuando quiero calcular una estadística que ya está calculada
       v_proceso varchar2(30) := 'calcular_estadistica_instr';
     begin
-        if EST_PAQ_EJECUTAR.ejecutar_proceso(f_desde => desde, f_hasta => hasta, CAMARA => N_CAMARA, quieroRecalcular => recalcular, datos_antes_del_inicio => hay_registros_anteriores) = 1 then
+        if EST_PAQ_EJECUTAR.ejecutar_proceso(f_desde => desde, f_hasta => hasta, CAMARA => N_CAMARA) = 1 then
             /* 1-> error, 0-> correcto */
-            raise error_yaFueCalculado;
+            raise error_enEjecutarProceso;
         else
             /* En instrucción empezaremos sin expedientes en trámite */
             est_paquete.ingresados(V_FECHADESDE => desde, V_FECHAHASTA => hasta, id_cam => N_CAMARA);
@@ -17,8 +16,8 @@ create or replace package body est_paquete_instruccion as
             est_paquete.calcula_salidos(finPeriodo => hasta, id_cam => N_CAMARA);
         end if;
     exception
-      when error_yaFueCalculado then
-          est_paquete.inserta_error(m_error => 'ESTADÍSTICA YA CALCULADA', nombre_proceso => v_proceso);
+      when error_enEjecutarProceso then
+          est_paquete.inserta_error(m_error => 'HUBO UN ERROR EJECUTANDO LA FUNCIÓN "EJECUTAR_PROCESO"', nombre_proceso => v_proceso);
       when others then
           est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
     end calcular_estadistica_instr;
@@ -56,7 +55,8 @@ create or replace package body est_paquete_instruccion as
                        where  c.id_cambio_asignacion_exp = A.ta_idtablaorigen
                        and    fecha_asignacion = to_timestamp('01/03/2017 12:00:00,000000000 AM', 'DD/MM/YYYY HH12:MI:SS,FF AM')
                        and    comentarios = 'POR ACORDADA 1/2017 CSJN'
-                       );
+                       )
+        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
         commit;
     exception
         when others then
