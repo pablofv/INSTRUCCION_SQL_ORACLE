@@ -36,7 +36,7 @@ create or replace package body est_paquete_instruccion as
 --        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion
 --        and   extract(year from ta_fecha) < 2013;
 
-        /* PARA 2013 EN ADELANTE, BORRARÉ TODO LO QUE NO SEA INSTRUCCIÓN, ROGATORIAS, MENORES O CORRECCIONAL */
+        /* PARA 2008 EN ADELANTE, BORRARÉ TODO LO QUE NO SEA INSTRUCCIÓN, ROGATORIAS, MENORES O CORRECCIONAL */
         delete from est_total_a ta
         where not exists (select id_oficina
                           from oficina o
