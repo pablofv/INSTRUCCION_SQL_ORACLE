@@ -28,13 +28,13 @@ create or replace package body est_paquete_instruccion as
         v_fin timestamp;
     begin
         /* ELIMINO LOS EXPEDIENTES QUE NO SON DE LAS OFICINAS DE INSTRUCCIÓN HASTA EL AÑO 2012 INCLUSIVE */
-        delete from est_total_a ta
-        where not exists (select id_oficina
-                          from oficina o
-                          where ta.ta_oficina = o.id_oficina
-                          and   o.sigla_cedulas = 'CI')
-        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion
-        and   extract(year from ta_fecha) < 2013;
+--        delete from est_total_a ta
+--        where not exists (select id_oficina
+--                          from oficina o
+--                          where ta.ta_oficina = o.id_oficina
+--                          and   o.sigla_cedulas = 'CI')
+--        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion
+--        and   extract(year from ta_fecha) < 2013;
 
         /* PARA 2013 EN ADELANTE, BORRARÉ TODO LO QUE NO SEA INSTRUCCIÓN, ROGATORIAS, MENORES O CORRECCIONAL */
         delete from est_total_a ta
@@ -43,7 +43,7 @@ create or replace package body est_paquete_instruccion as
                           where ta.ta_oficina = o.id_oficina
                           and   o.sigla_cedulas in ('CI', 'CR','JNM', 'RO'))
         and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion
-        and   extract(year from ta_fecha) >= 2013;
+        and   extract(year from ta_fecha) >= 2008;
 
         /* ELIMINO AQUELLOS EXPEDIENTES QUE TIENEN AÑO DE CAUSA ANTERIOR A 2008, YA QUE LO CONSIDERABA ASÍ EN INSTRUCCIÓN CON SQLSERVER */
         delete from est_total_a
