@@ -21,7 +21,7 @@ create or replace package body est_paquete as
                 ID_CAMBIO_ASIGNACION_EXP, tabladesde,
                 0,
                 v_inicio, v_numero_de_ejecucion, v_numero_estadistica, id_materia, id_cam
-        from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION desc) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
+        from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION desc, ID_CAMBIO_ASIGNACION_EXP, tabladesde) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación, si la fecha es igual que ordene por id de la tabla proveniente
                      e.id_expediente idexp,
                      e.ANIO_EXPEDIENTE anio,
                      e.NUMERO_EXPEDIENTE numExp,
@@ -104,7 +104,7 @@ create or replace package body est_paquete as
                ID_CAMBIO_ASIGNACION_EXP, tabladesde,
                1, /* -> ingresados */
                v_inicio, v_numero_de_ejecucion, v_numero_estadistica, id_materia, id_cam
-        from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION ) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
+        from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, tabladesde ) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación, si la fecha es igual que ordene por id de la tabla proveniente
               e.id_expediente idexp,
               e.ANIO_EXPEDIENTE anio,
               e.NUMERO_EXPEDIENTE numExp,
@@ -163,7 +163,7 @@ create or replace package body est_paquete as
                ID_CAMBIO_ASIGNACION_EXP, tabladesde,
                2,
                v_inicio, v_numero_de_ejecucion, v_numero_estadistica, id_materia, id_cam
-        from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION ) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación
+        from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, tabladesde ) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación, si la fecha es igual que ordene por id de la tabla proveniente
               e.id_expediente idexp,
               e.ANIO_EXPEDIENTE anio,
               e.NUMERO_EXPEDIENTE numExp,
