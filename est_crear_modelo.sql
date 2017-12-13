@@ -38,6 +38,7 @@ begin
     execute immediate 'CREATE TABLE EST_VARIABLE_ESTADISTICA(VE_VALOR INT,
                                                              VE_CAMARA INT
                                                              )';
+    execute immediate 'INSERT INTO EST_VARIABLE_ESTADISTICA (VE_VALOR, VE_CAMARA) VALUES (0, 6)';
     execute immediate 'INSERT INTO EST_VARIABLE_ESTADISTICA (VE_VALOR, VE_CAMARA) VALUES (0, 8)';
     execute immediate 'INSERT INTO EST_VARIABLE_ESTADISTICA (VE_VALOR, VE_CAMARA) VALUES (0, 9)';
     execute immediate 'INSERT INTO EST_VARIABLE_ESTADISTICA (VE_VALOR, VE_CAMARA) VALUES (0, 15)';
