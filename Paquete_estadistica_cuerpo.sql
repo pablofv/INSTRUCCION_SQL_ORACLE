@@ -87,7 +87,7 @@ create or replace package body est_paquete as
 /*                    INGRESADOS Y REINGRESADOS                    */
 /*******************************************************************/
 
-    procedure ingresados(v_fechaDesde in timestamp, v_fechahasta in timestamp, id_cam in int) as
+    procedure ingresados_y_reingresados(v_fechaDesde in timestamp, v_fechahasta in timestamp, id_cam in int) as
       v_proceso varchar2(30) := 'ingresados';
       v_inicio timestamp := systimestamp;
       v_fin timestamp;
