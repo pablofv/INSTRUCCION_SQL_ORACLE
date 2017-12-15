@@ -48,8 +48,7 @@ create or replace package est_paquete as
     v_numero_estadistica int;
 
     procedure saldo_al_inicio(v_fechahasta in timestamp, id_cam in int);
-    procedure ingresados(v_fechaDesde in timestamp, v_fechahasta in timestamp, id_cam in int);
-    procedure reingresados(v_fechaDesde in timestamp, v_fechahasta in timestamp, id_cam in int);
+    procedure ingresados_y_reingresados(v_fechaDesde in timestamp, v_fechahasta in timestamp, id_cam in int);
     procedure agrego_delito(id_cam in int);
     procedure calcula_salidos(finPeriodo in timestamp, id_cam in number);
     function f_gestiona_salidas(reg in cursor_Salidos%rowtype, regAnt in cursor_Salidos%rowtype, id_camara in number, finDePeriodo in timestamp, v_FECHA_DE_EJECUCION in timestamp, nroFila in int) return int;
