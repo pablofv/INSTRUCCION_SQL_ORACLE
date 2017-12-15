@@ -8,7 +8,7 @@ create or replace package body est_paquete_instruccion as
             raise error_enEjecutarProceso;
         else
             /* En instrucción empezaremos sin expedientes en trámite */
-            est_paquete.ingresados(V_FECHADESDE => desde, V_FECHAHASTA => hasta, id_cam => N_CAMARA);
+            est_paquete.ingresados_y_reingresados(V_FECHADESDE => desde, V_FECHAHASTA => hasta, id_cam => N_CAMARA);
             est_paquete.reingresados(v_fechaDesde => desde, v_fechahasta => hasta, id_cam => N_CAMARA);
             --ELIMINAMOS TODO LO QUE NO SEA UN MOVIMIENTO DE INSTRUCCIÓN
             dejarSoloInstruccion;
