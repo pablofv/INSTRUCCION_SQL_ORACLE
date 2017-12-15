@@ -83,9 +83,9 @@ create or replace package body est_paquete as
           inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
     end saldo_al_inicio;
 
-/****************************************************/
-/*                    INGRESADOS                    */
-/****************************************************/
+/*******************************************************************/
+/*                    INGRESADOS Y REINGRESADOS                    */
+/*******************************************************************/
 
     procedure ingresados(v_fechaDesde in timestamp, v_fechahasta in timestamp, id_cam in int) as
       v_proceso varchar2(30) := 'ingresados';
