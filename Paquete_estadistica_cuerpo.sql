@@ -139,7 +139,7 @@ create or replace package body est_paquete as
           inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
           v_fin := systimestamp;
           inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
-    end ingresados;
+    end ingresados_y_reingresados;
 
 /***************************************************/
 /*                  AGREGO_DELITO                  */
