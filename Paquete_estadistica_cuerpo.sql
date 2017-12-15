@@ -128,8 +128,7 @@ create or replace package body est_paquete as
               and o.ID_CAMARA in (id_cam)
               and O.ID_TIPO_OFICINA IN (1,2) -- Toma solo los Juzgados y Secretarías.
              )
-        where rn = 1
-        and   trunc(FECHA_ASIGNACION) between v_fechaDesde and v_fechahasta
+        where trunc(FECHA_ASIGNACION) between v_fechaDesde and v_fechahasta
         order by anio, numexp, FECHA_ASIGNACION;
         commit;
         v_fin := systimestamp;
