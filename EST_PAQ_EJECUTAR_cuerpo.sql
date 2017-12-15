@@ -44,6 +44,7 @@ CREATE OR REPLACE PACKAGE body EST_PAQ_EJECUTAR AS
         select nvl(count(*), 0) into inmediato
         from est_ejecuciones
         where fecha_hasta = f_desde - 1
+        and   numero_estadistica = est_paquete.v_numero_estadistica
         and   camara = p_camara;
 
         if inmediato <> 0 then
