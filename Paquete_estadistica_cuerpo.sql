@@ -102,7 +102,7 @@ create or replace package body est_paquete as
         SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
                1, /* -> finalizo originalmente está en 1 (quiere decir en trámite) y luego si la considero salida actualizo a 0 que es fuera de trámite */
                ID_CAMBIO_ASIGNACION_EXP, tabladesde,
-               1, /* -> ingresados */
+               case when rn = 1 then 1 when rn > 1 then 2 end, /* -> 1 = ingresados , 2 = reingresados */
                v_inicio, v_numero_de_ejecucion, v_numero_estadistica, id_materia, id_cam
         from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, tabladesde ) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación, si la fecha es igual que ordene por id de la tabla proveniente
               e.id_expediente idexp,
