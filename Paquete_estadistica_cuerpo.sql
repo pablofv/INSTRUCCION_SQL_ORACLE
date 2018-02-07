@@ -83,6 +83,53 @@ create or replace package body est_paquete as
           inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
     end saldo_al_inicio;
 
+
+/*******************************************************************/
+/*                     AGREGAR SALDO MULTIBASE                     */
+/*******************************************************************/
+  procedure saldo_multibase(v_camara in int, v_numero_ejecucion in int, v_numero_estadistica in int) as
+    v_materia int := 9;
+  begin
+    insert into est_total_a(TA_ANIO_EXP,
+                            TA_CAMARA,
+                            TA_CODIGO,
+                            TA_FECHA,
+                            TA_FECHA_DE_FINALIZACION,
+                            TA_FECHA_PROCESO,
+                            TA_FINALIZO,
+                            TA_IDEXP,
+                            TA_IDTABLAORIGEN,
+                            TA_MATERIA,
+                            TA_NUMERO_DE_EJECUCION,
+                            TA_NUMERO_ESTADISTICA,
+                            TA_NUMERO_EXP,
+                            TA_OBJETO,
+                            TA_OFICINA,
+                            TA_RN,
+                            TA_TABLAORIGEN,
+                            TA_TIPO_DE_DATO)
+    select anode, --ta_anio_exp
+            v_camara, --ta_camara
+            codigo_tipo_cambio_asignacion, --ta_codigo
+            fecha_asignacion,--ta_fecha
+            null, --ta_fecha_de_finalizacion
+            systimestamp, --ta_fecha_proceso
+            null, --ta_finalizo
+            d.id_expediente, --ta_idexp
+            id_cambio_asignacion_exp, --ta_idtablaorigen
+            v_materia, --ta_materia
+            v_numero_ejecucion, --ta_numero_ejecucion
+            v_numero_estadistica, --ta_numero_de_estadistica
+            numdem, --ta_numero_exp
+            null, --ta_objdem
+            d.id_oficina, --ta_oficina
+            1, --ta_rn
+            1, --ta_tablaorigen ESTO DEBE CAMBIARSE, PARA DISCRIMINAR LOS 3 REGISTROS QUE VIENEN DE OFICINA_EXP DE LOS DEMÁS QUE SON DE CAMBIO
+            0 --TA_TIPO_DE_DATO
+    from EST_SQLSRV_DEFINITIVO d join est_saldo_sql s on d.id_expediente = s.id_expediente;
+  end saldo_multibase;
+
+
 /*******************************************************************/
 /*                    INGRESADOS Y REINGRESADOS                    */
 /*******************************************************************/
@@ -92,6 +139,10 @@ create or replace package body est_paquete as
       v_inicio timestamp := systimestamp;
       v_fin timestamp;
     begin
+    
+        if id_cam = 9 and v_fechaDesde = to_timestamp('01/01/2013', 'dd/mm/yyyy') then
+            saldo_multibase(v_camara => id_cam, v_numero_ejecucion => v_numero_de_ejecucion, v_numero_estadistica => v_numero_estadistica);
+        end if;
         /* Calculo los ingresados en base a la consulta de ingresados base, eligiendo la cámara 8, al particionar por
            expediente y oficina, los rn=1 son los primeros ingresos a cada una */
         INSERT INTO LEX100MAESTRAS.EST_TOTAL_A(TA_IDEXP, TA_RN, TA_ANIO_EXP, TA_NUMERO_EXP, TA_OFICINA, TA_FECHA, TA_CODIGO, TA_OBJETO,
