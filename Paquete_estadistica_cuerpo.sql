@@ -114,7 +114,7 @@ create or replace package body est_paquete as
             fecha_asignacion,--ta_fecha
             null, --ta_fecha_de_finalizacion
             systimestamp, --ta_fecha_proceso
-            null, --ta_finalizo
+            1, --ta_finalizo
             d.id_expediente, --ta_idexp
             id_cambio_asignacion_exp, --ta_idtablaorigen
             v_materia, --ta_materia
