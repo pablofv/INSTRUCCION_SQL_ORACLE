@@ -88,6 +88,9 @@ create or replace package body est_paquete as
 /*                     AGREGAR SALDO MULTIBASE                     */
 /*******************************************************************/
   procedure saldo_multibase(v_camara in int, v_numero_ejecucion in int, v_numero_estadistica in int) as
+    v_proceso varchar2(30) := 'saldo_multibase';
+    v_inicio timestamp := systimestamp;
+    v_fin timestamp;
     v_materia int := 9;
   begin
     insert into est_total_a(TA_ANIO_EXP,
@@ -127,6 +130,13 @@ create or replace package body est_paquete as
             1, --ta_tablaorigen ESTO DEBE CAMBIARSE, PARA DISCRIMINAR LOS 3 REGISTROS QUE VIENEN DE OFICINA_EXP DE LOS DEMÁS QUE SON DE CAMBIO
             0 --TA_TIPO_DE_DATO
     from EST_SQLSRV_DEFINITIVO d join est_saldo_sql s on d.id_expediente = s.id_expediente;
+    commit;
+  exception
+      when others then
+        rollback;
+        inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
+        v_fin := systimestamp;
+        inserta_duracion_procesos(camara => v_camara, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
   end saldo_multibase;
 
 
