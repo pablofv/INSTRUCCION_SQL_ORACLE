@@ -92,6 +92,8 @@ create or replace package body est_paquete as
     v_inicio timestamp := systimestamp;
     v_fin timestamp;
     v_materia int := 9;
+    v_clave_antes_commit int;
+    v_clave_despues_commit int;
   begin
     insert into est_total_a(TA_ANIO_EXP,
                             TA_CAMARA,
@@ -130,7 +132,13 @@ create or replace package body est_paquete as
             1, --ta_tablaorigen ESTO DEBE CAMBIARSE, PARA DISCRIMINAR LOS 3 REGISTROS QUE VIENEN DE OFICINA_EXP DE LOS DEMÁS QUE SON DE CAMBIO
             0 --TA_TIPO_DE_DATO
     from EST_SQLSRV_DEFINITIVO d join est_saldo_sql s on d.id_expediente = s.id_expediente;
+    select max(ta_clave) into v_clave_antes_commit from est_total_a where ta_numero_estadistica = v_numero_estadistica;
     commit;
+    
+    select max(ta_clave) into v_clave_despues_commit from est_total_a where ta_numero_estadistica = v_numero_estadistica;
+    
+    inserta_error(m_error => 'Valor máximo de clave antes de commit: ' || to_char(v_clave_antes_commit), nombre_proceso => v_proceso);
+    inserta_error(m_error => 'Valor máximo de clave después de commit: ' || to_char(v_clave_despues_commit), nombre_proceso => v_proceso);
   exception
       when others then
         rollback;
