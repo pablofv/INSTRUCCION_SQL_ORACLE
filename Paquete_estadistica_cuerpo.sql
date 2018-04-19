@@ -158,9 +158,6 @@ create or replace package body est_paquete as
       v_fin timestamp;
     begin
     
-        if id_cam = 9 and v_fechaDesde = to_timestamp('01/01/2013', 'dd/mm/yyyy') then
-            saldo_multibase(v_camara => id_cam, v_numero_ejecucion => v_numero_de_ejecucion, v_numero_estadistica => v_numero_estadistica);
-        end if;
         /* Calculo los ingresados en base a la consulta de ingresados base, eligiendo la cámara 8, al particionar por
            expediente y oficina, los rn=1 son los primeros ingresos a cada una */
         INSERT INTO LEX100MAESTRAS.EST_TOTAL_A(TA_IDEXP, TA_RN, TA_ANIO_EXP, TA_NUMERO_EXP, TA_OFICINA, TA_FECHA, TA_CODIGO, TA_OBJETO,
@@ -200,6 +197,13 @@ create or replace package body est_paquete as
         where trunc(FECHA_ASIGNACION) between v_fechaDesde and v_fechahasta
         order by anio, numexp, FECHA_ASIGNACION;
         commit;
+--  Elimino todo lo anterior a 2013.
+        est_paquete_instruccion.eliminarAsignacionesAntA2013;
+-- Agrego el saldo que quedó del proceso SQL.
+        if id_cam = 9 and v_fechaDesde = to_timestamp('01/01/2013', 'dd/mm/yyyy') then
+            saldo_multibase(v_camara => id_cam, v_numero_ejecucion => v_numero_de_ejecucion, v_numero_estadistica => v_numero_estadistica);
+        end if;
+
         v_fin := systimestamp;
         inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
     exception
