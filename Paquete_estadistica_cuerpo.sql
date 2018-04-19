@@ -296,12 +296,19 @@ create or replace package body est_paquete as
     function f_gestiona_salidas(reg in cursor_Salidos%rowtype, regAnt in cursor_Salidos%rowtype, id_camara number, finDePeriodo in timestamp, v_FECHA_DE_EJECUCION in timestamp, nroFila in int) return int is
         actuacion_id int;
         v_proceso varchar2(30) := 'f_gestiona_salidas';
+        v_menorFecha timestamp;
     begin
+        if regAnt.ta_fecha < to_timestamp('01/01/2013 12:00:00,000000000 AM', 'DD/MM/YYYY HH12:MI:SS,FF AM') then --averiguo si es menor la fecha del expediente o la fecha de inicio y me quedo con la menor
+            v_menorFecha := to_timestamp('01/01/2013 12:00:00,000000000 AM', 'DD/MM/YYYY HH12:MI:SS,FF AM');
+        else
+            v_menorFecha := REGANT.TA_FECHA;
+        end if;
+
         if reg.ta_idexp = regant.ta_idexp then /* SI ES LA MISMA CAUSA */
             -- Busco salida entre esos dos registros
-            actuacion_id := f_busca_la_salida(idexp => reg.ta_idexp, id_cam => id_camara, fechaDesde => regAnt.ta_fecha, fechaHasta => reg.ta_fecha, oficina => regAnt.ta_oficina, reg => reg, regAnt => regAnt, filaActual => nroFila, fechaDelProceso => v_FECHA_DE_EJECUCION);
+            actuacion_id := f_busca_la_salida(idexp => reg.ta_idexp, id_cam => id_camara, fechaDesde => v_menorFecha, fechaHasta => reg.ta_fecha, oficina => regAnt.ta_oficina, reg => reg, regAnt => regAnt, filaActual => nroFila, fechaDelProceso => v_FECHA_DE_EJECUCION);
         else -- cambie de expediente, busco hasta el fin de período
-            actuacion_id := f_busca_la_salida(idexp => regAnt.ta_idexp, id_cam => id_camara, fechaDesde => regAnt.ta_fecha, fechaHasta => finDePeriodo, oficina => regAnt.ta_oficina, reg => reg, regAnt => regAnt, filaActual => nroFila, fechaDelProceso => v_FECHA_DE_EJECUCION);
+            actuacion_id := f_busca_la_salida(idexp => regAnt.ta_idexp, id_cam => id_camara, fechaDesde => v_menorFecha, fechaHasta => finDePeriodo, oficina => regAnt.ta_oficina, reg => reg, regAnt => regAnt, filaActual => nroFila, fechaDelProceso => v_FECHA_DE_EJECUCION);
         end if;
         /* Inserto en el log los valores del cursor */
         -- Le resto uno a la fila para que empiece por uno (a las comparaciones entre filas del cursor recién entro en la segunda iteración,
