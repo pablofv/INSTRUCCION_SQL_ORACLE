@@ -10,7 +10,10 @@ create or replace package body est_paquete_instruccion as
             /* En instrucción empezaremos sin expedientes en trámite */
             est_paquete.ingresados_y_reingresados(V_FECHADESDE => desde, V_FECHAHASTA => hasta, id_cam => N_CAMARA);
             --ELIMINAMOS TODO LO QUE NO SEA UN MOVIMIENTO DE INSTRUCCIÓN
-            dejarSoloInstruccion;
+         --   eliminarAsignacionesAntA2013;
+            dejarSoloInstruccion2;
+            eliminarAnterioresA2008;
+            eliminarFalsasAsignaciones;
             est_paquete.agrego_delito(id_cam => N_CAMARA);
             est_paquete.calcula_salidos(finPeriodo => hasta, id_cam => N_CAMARA);
         end if;
@@ -20,6 +23,77 @@ create or replace package body est_paquete_instruccion as
       when others then
           est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
     end calcular_estadistica_instr;
+
+    procedure eliminarAsignacionesAntA2013 is
+        v_proceso varchar2(30) := 'eliminarAsignacionesAntA2013';
+        v_inicio timestamp := systimestamp;
+        v_fin timestamp;
+    begin
+      delete from est_total_a
+      where extract(year from TA_FECHA) <= 2013
+      and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
+      commit;
+    exception
+        when others then
+            est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
+            rollback;
+    end eliminarAsignacionesAntA2013;
+
+    procedure eliminarFalsasAsignaciones is
+        v_proceso varchar2(30) := 'eliminarFalsasAsignaciones';
+        v_inicio timestamp := systimestamp;
+        v_fin timestamp;
+    begin
+        delete from est_total_a a
+        where  exists (select c.id_cambio_asignacion_exp
+                       from cambio_asignacion_exp c
+                       where  c.id_cambio_asignacion_exp = A.ta_idtablaorigen
+                       and    fecha_asignacion = to_timestamp('01/03/2017 12:00:00,000000000 AM', 'DD/MM/YYYY HH12:MI:SS,FF AM')
+                       and    comentarios = 'POR ACORDADA 1/2017 CSJN'
+                       )
+        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
+        commit;
+    exception
+        when others then
+            est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
+            rollback;
+    end eliminarFalsasAsignaciones;
+
+    procedure eliminarAnterioresA2008 is
+        v_proceso varchar2(30) := 'eliminarAnterioresA2008';
+        v_inicio timestamp := systimestamp;
+        v_fin timestamp;
+    begin
+        /* ELIMINO AQUELLOS EXPEDIENTES QUE TIENEN AÑO DE CAUSA ANTERIOR A 2008, YA QUE LO CONSIDERABA ASÍ EN INSTRUCCIÓN CON SQLSERVER */
+        delete from est_total_a
+        where   ta_anio_exp < 2008
+        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
+        commit;
+    exception
+        when others then
+            est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
+            rollback;
+    end eliminarAnterioresA2008;
+
+
+    procedure dejarSoloInstruccion2 is
+        v_proceso varchar2(30) := 'dejarSoloInstruccion2';
+        v_inicio timestamp := systimestamp;
+        v_fin timestamp;
+    begin
+        /* ELIMINO TODO LO QUE NO SEA DE UNA OFICINA DE INSTRUCCION */
+        delete from est_total_a ta
+        where not exists (select id_oficina
+                          from oficina o
+                          where ta.ta_oficina = o.id_oficina
+                          and   o.sigla_cedulas = 'CI')
+        and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
+        commit;
+    exception
+        when others then
+            est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
+            rollback;
+    end dejarSoloInstruccion2;
 
     procedure dejarSoloInstruccion is
         v_proceso varchar2(30) := 'dejarSoloInstruccion';
