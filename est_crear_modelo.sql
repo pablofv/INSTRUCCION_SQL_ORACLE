@@ -13,8 +13,8 @@ declare
         select *
         BULK COLLECT INTO v_tablas
         from user_objects
-        where upper(object_name) in ('EST_SALIDOS', 'EST_LOG', 'EST_DURACION_PROCESO', 'EST_CODIGOS_SALIDA',
-                                     'EST_ERRORES', 'EST_EJECUCIONES', 'EST_TOTAL_A', 'EST_SECFECHAPROCESO')
+        where upper(object_name) in ('EST_SALIDOS', 'EST_LOG', 'EST_DURACION_PROCESO', 'EST_CODIGOS_SALIDA', 'EST_TOTAL_A',
+                                     'EST_ERRORES', 'EST_EJECUCIONES', 'EST_VARIABLE_ESTADISTICA', 'EST_SECFECHAPROCESO')
         order by Object_Id desc;
         if v_tablas.last > 0 then -- encontró objetos creados
             ultimo_elemento := v_tablas.last;
@@ -323,6 +323,6 @@ begin
     commit;
 exception
     when others then
-      --DBMS_OUTPUT.PUT_LINE(DBMS_UTILITY.format_error_stack);
-      est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
+      DBMS_OUTPUT.PUT_LINE(DBMS_UTILITY.format_error_stack);
+      --est_paquete.inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
 end est_proc_crear_modelo;
