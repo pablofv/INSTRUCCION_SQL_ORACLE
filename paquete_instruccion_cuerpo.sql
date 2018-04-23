@@ -30,7 +30,7 @@ create or replace package body est_paquete_instruccion as
         v_fin timestamp;
     begin
       delete from est_total_a
-      where extract(year from TA_FECHA) <= 2013
+      where extract(year from TA_FECHA) < 2013
       and   TA_NUMERO_DE_EJECUCION = est_paquete.v_numero_de_ejecucion;
       commit;
     exception
