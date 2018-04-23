@@ -116,7 +116,7 @@ create or replace package body est_paquete as
     select anode, --ta_anio_exp
             v_camara, --ta_camara
             codigo_tipo_cambio_asignacion, --ta_codigo
-            to_timestamp('31/12/2012 11:59:59,999999999 PM', 'DD/MM/YYYY HH12:MI:SS,FF AM'),--ta_fecha
+            to_timestamp('31/12/2012 23:59:59,999999', 'DD/MM/YYYY HH24:MI:SS,FF'),--ta_fecha
             null, --ta_fecha_de_finalizacion
             systimestamp, --ta_fecha_proceso
             1, --ta_finalizo
