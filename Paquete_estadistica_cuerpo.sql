@@ -360,12 +360,12 @@ create or replace package body est_paquete as
                     and   i.fecha_informacion between fechaDesde and fechaHasta
                     and   est_busca_juzgado(a.id_oficina) = est_busca_juzgado(oficina)
                     and   i.id_tipo_informacion = 241
-                    union all
+              /*      union all
                     select c.tipo_radicacion, c.id_cambio_asignacion_exp, c.fecha_asignacion, c.codigo_tipo_cambio_asignacion as codigo, c.id_expediente
                     from cambio_asignacion_exp c
                     where c.id_expediente = idexp
                     and   c.fecha_asignacion > fechaDesde
-                    and   c.fecha_asignacion < fechaHasta
+                    and   c.fecha_asignacion < fechaHasta*/
                     ) cambio_actuacion
               ) r -- de resultado
         where numero_fila = 1;
