@@ -408,24 +408,26 @@ create or replace package body est_paquete as
             where numero_fila = 1;
         exception
             when no_data_found then
-                null;
+                --Si estoy en la misma causa, agrego un código de FIN
+                if (reg.ta_idexp) = (regAnt.ta_idexp) then
+                    /* preparo el registro que insertaremos */
+                    r_insertSalido.actuacion := id_act;
+                    r_insertSalido.anio_exp := regAnt.ta_anio_exp;
+                    r_insertSalido.codigo := 'FIN';
+                    r_insertSalido.fecha := reg.ta_fecha; -- cambio la fecha del reg anterior por la fecha del registro actual
+                    r_insertSalido.fecha_proceso := fechaDelProceso;
+                    r_insertSalido.idexp := regAnt.ta_idexp;
+                    r_insertSalido.numero_exp := regAnt.ta_numero_exp;
+                    r_insertSalido.objeto := regAnt.ta_objeto;
+                    r_insertSalido.oficina := regAnt.ta_oficina;
+                    r_insertSalido.rn := regAnt.ta_rn;
+                    r_insertSalido.id_ingresado := regAnt.ta_clave;
+                    r_insertSalido.tipo_de_dato := regAnt.ta_tipo_de_dato;
+                    inserta_salida(registro => r_insertSalido, reg => reg, regAnt => regAnt, id_actuacion => id_act, filaActual => filaActual, fechaProceso => fechaDelProceso);
+                end if; --(reg = regAnt)
+                return 0;
         end;
-            if (reg.ta_idexp) = (regAnt.ta_idexp) then -- Estoy buscando entre registros de la misma causa
-                /* preparo el registro que insertaremos */
-                r_insertSalido.actuacion := id_act;
-                r_insertSalido.anio_exp := regAnt.ta_anio_exp;
-                r_insertSalido.codigo := 'FIN';
-                r_insertSalido.fecha := reg.ta_fecha; -- cambio la fecha del reg anterior por la fecha del registro actual
-                r_insertSalido.fecha_proceso := fechaDelProceso;
-                r_insertSalido.idexp := regAnt.ta_idexp;
-                r_insertSalido.numero_exp := regAnt.ta_numero_exp;
-                r_insertSalido.objeto := regAnt.ta_objeto;
-                r_insertSalido.oficina := regAnt.ta_oficina;
-                r_insertSalido.rn := regAnt.ta_rn;
-                r_insertSalido.id_ingresado := regAnt.ta_clave;
-                r_insertSalido.tipo_de_dato := regAnt.ta_tipo_de_dato;
-                inserta_salida(registro => r_insertSalido, reg => reg, regAnt => regAnt, id_actuacion => id_act, filaActual => filaActual, fechaProceso => fechaDelProceso);
-            end if; --(reg = regAnt)
+            
             return 0;
         when too_many_rows then
             inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
