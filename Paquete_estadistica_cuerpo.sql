@@ -393,7 +393,23 @@ create or replace package body est_paquete as
             --inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
             /* Si estoy buscando salidas entre dos registros de la misma causa inserto un código FIN, pero si estoy buscando entre dos causas */
             /* diferentes, y no encontré una salida no debo insertar un código FIN */
-  
+        declare /* Otro bloque para manejar excepciones que se puedan dar dentro del bloque de excepciones */
+        begin
+            -- Si no hay salidas, busco si hubo cambios de asignacion
+            select id_actuacion_exp, fecha_actuacion, codigo, radicacion into id_act, fechaSalida, codigoSalida, radicacion
+            from (select ROW_NUMBER() over(partition by id_expediente order by fecha_actuacion desc) numero_fila, id_actuacion_exp, fecha_actuacion, codigo, radicacion
+                  from (select c.tipo_radicacion radicacion, c.id_cambio_asignacion_exp id_actuacion_exp, c.fecha_asignacion fecha_actuacion, c.codigo_tipo_cambio_asignacion as codigo, c.id_expediente
+                        from cambio_asignacion_exp c
+                        where c.id_expediente = idexp
+                        and   c.fecha_asignacion > fechaDesde
+                        and   c.fecha_asignacion < fechaHasta
+                        ) cambio_actuacion
+                  ) r -- de resultado
+            where numero_fila = 1;
+        exception
+            when no_data_found then
+                null;
+        end;
             if (reg.ta_idexp) = (regAnt.ta_idexp) then -- Estoy buscando entre registros de la misma causa
                 /* preparo el registro que insertaremos */
                 r_insertSalido.actuacion := id_act;
