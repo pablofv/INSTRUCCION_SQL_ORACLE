@@ -406,6 +406,25 @@ create or replace package body est_paquete as
                         ) cambio_actuacion
                   ) r -- de resultado
             where numero_fila = 1;
+            -- Hubo un cambio de asignacion, considero la causa como finalizada en la oficina actual
+            /* ENCONTRÉ UNA SALIDA, PREPARO EL REGISTRO PARA INSERTAR EN LA TABLA DE SALIDOS */
+            r_insertSalido.radicacion := radicacion;
+            r_insertSalido.actuacion := id_act;
+            r_insertSalido.anio_exp := regAnt.ta_anio_exp;
+            r_insertSalido.codigo := 'FIN'; -- Agrego un código FIN para no tener muchos códigos de asignaciones como códigos de salida
+            r_insertSalido.fecha := fechaSalida;
+            r_insertSalido.fecha_proceso := fechaDelProceso;
+            r_insertSalido.idexp := regAnt.ta_idexp;
+            r_insertSalido.numero_exp := regAnt.ta_numero_exp;
+            r_insertSalido.objeto := regAnt.ta_objeto;
+            r_insertSalido.oficina := regAnt.ta_oficina;
+            r_insertSalido.rn := regAnt.ta_rn;
+            r_insertSalido.id_ingresado := regAnt.ta_clave;
+            r_insertSalido.tipo_de_dato := regAnt.ta_tipo_de_dato;
+
+            inserta_salida(registro => r_insertSalido, reg => reg, regAnt => regAnt, id_actuacion => id_act, filaActual => filaActual, fechaProceso => fechaDelProceso);
+
+            return id_act;
         exception
             when no_data_found then
                 --Si estoy en la misma causa, agrego un código de FIN
@@ -426,6 +445,12 @@ create or replace package body est_paquete as
                     inserta_salida(registro => r_insertSalido, reg => reg, regAnt => regAnt, id_actuacion => id_act, filaActual => filaActual, fechaProceso => fechaDelProceso);
                 end if; --(reg = regAnt)
                 return 0;
+            when too_many_rows then
+                inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
+                return -3;
+            when others then
+                inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
+                return -1;
         end;
             
             return 0;
