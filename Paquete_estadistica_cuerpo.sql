@@ -403,6 +403,8 @@ create or replace package body est_paquete as
                         where c.id_expediente = idexp
                         and   c.fecha_asignacion > fechaDesde
                         and   c.fecha_asignacion < fechaHasta
+                        and   not (fecha_asignacion = to_timestamp('01/03/2017 12:00:00,000000000 AM', 'DD/MM/YYYY HH12:MI:SS,FF AM')
+                                   and    comentarios = 'POR ACORDADA 1/2017 CSJN') --No quiero las falsas asignaciones
                         ) cambio_actuacion
                   ) r -- de resultado
             where numero_fila = 1;
