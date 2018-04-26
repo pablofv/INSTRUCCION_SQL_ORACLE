@@ -358,7 +358,6 @@ create or replace package body est_paquete as
                                        join actuacion_exp a on a.id_informacion = i.id_informacion
                     where i.id_expediente = idexp
                     and   i.fecha_informacion between fechaDesde and fechaHasta
-                    and   est_busca_juzgado(a.id_oficina) = est_busca_juzgado(oficina)
                     and   i.id_tipo_informacion = 241
               /*      union all
                     select c.tipo_radicacion, c.id_cambio_asignacion_exp, c.fecha_asignacion, c.codigo_tipo_cambio_asignacion as codigo, c.id_expediente
