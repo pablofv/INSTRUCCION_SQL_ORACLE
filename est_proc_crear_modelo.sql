@@ -40,7 +40,6 @@ begin
                                            fecha_asignacion timestamp,
                                            codigo_tipo_cambio_asignacion varchar2(3 byte),
                                            id_cambio_asignacion_exp int,
-                                           status int,
                                            n_fila int,
                                            anio_exp int,
                                            numero_exp int,
