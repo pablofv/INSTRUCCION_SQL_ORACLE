@@ -13,8 +13,8 @@ declare
         select *
         BULK COLLECT INTO v_tablas
         from user_objects
-        where upper(object_name) in ('EST_SALIDOS', 'EST_LOG', 'EST_DURACION_PROCESO', 'EST_CODIGOS_SALIDA',
-                                     'EST_ERRORES', 'EST_FECHA_DE_PROCESOS', 'EST_TOTAL_A', 'EST_SECFECHAPROCESO')
+        where upper(object_name) in ('EST_SALIDOS', 'EST_LOG', 'EST_DURACION_PROCESO', 'EST_CODIGOS_SALIDA', 'EST_TOTAL_A',
+                                     'EST_ERRORES', 'EST_FECHA_DE_PROCESOS', 'EST_CAMBIO_ASIGNACION_EXP', 'EST_SECFECHAPROCESO')
         order by Object_Id desc;
         if v_tablas.last > 0 then -- encontró objetos creados
             ultimo_elemento := v_tablas.last;
@@ -32,6 +32,20 @@ declare
 begin
 -- Primero borro el modelo
     est_proc_borrar_modelo;
+
+    execute immediate 'create table est_cambio_asignacion_exp(tablaDesde int,
+                                           id_expediente int,
+                                           id_oficina int,
+                                           id_secretaria int,
+                                           fecha_asignacion timestamp,
+                                           codigo_tipo_cambio_asignacion varchar2(3 byte),
+                                           id_cambio_asignacion_exp int,
+                                           status int,
+                                           n_fila int,
+                                           anio_exp int,
+                                           numero_exp int,
+                                           CONSTRAINT CP_EST_CAMBIO PRIMARY KEY (tablaDesde, id_cambio_asignacion_exp))';
+    execute immediate 'comment on column est_cambio_asignacion_exp.tablaDesde is ''De donde proviene el dato: 1 => cambio; 2 = Actuación.''';
 
     execute immediate 'CREATE TABLE est_fecha_de_procesos(FECHA TIMESTAMP(6),
                                                           N_EJECUCION INT,
