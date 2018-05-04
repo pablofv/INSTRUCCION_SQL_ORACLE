@@ -1,5 +1,44 @@
 create or replace package body est_paquete as
 /****************************************************/
+/*          GENERAR_EST_CAMBIO_ASIGNACION           */
+/****************************************************/
+    procedure generar_est_cambio_asignacion(v_fechaDesde in timestamp, v_fechaHasta in timestamp, id_cam in int) as
+      v_proceso varchar2(30) := 'generar_est_cambio_asignacion';
+      v_inicio timestamp := systimestamp;
+      v_fin timestamp;
+    begin
+        insert into est_cambio_asignacion_exp(N_FILA, TABLADESDE, ID_EXPEDIENTE, ID_OFICINA, ID_SECRETARIA, FECHA_ASIGNACION, CODIGO_TIPO_CAMBIO_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, ANIO_EXP, NUMERO_EXP)
+        select *
+        from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, tabladesde) n_fila,
+                     TABLADESDE, c.ID_EXPEDIENTE, c.ID_OFICINA, ID_SECRETARIA, FECHA_ASIGNACION, CODIGO_TIPO_CAMBIO_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, ANIO_EXPEDIENTE, NUMERO_EXPEDIENTE
+              from (select COMENTARIOS, 1 tabladesde, c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
+                    from CAMBIO_ASIGNACION_EXP c1
+                    union all
+                    select NULL, 2, a.ID_EXPEDIENTE, a.ID_OFICINA, a.id_secretaria, a.FECHA_actuacion, ee.codigo_estado_expediente, a.ID_actuacion_EXP, a.status
+                    from actuacion_exp a join estado_Expediente ee on a.id_estado_expediente = ee.id_estado_expediente
+                    where ee.codigo_estado_expediente = 'REI') c
+              JOIN EXPEDIENTE e on e.status = 0 and e.ID_EXPEDIENTE = c.ID_EXPEDIENTE and e.NATURALEZA_EXPEDIENTE in ('P')
+              JOIN OFICINA o on c.ID_OFICINA = o.ID_OFICINA
+              where c.status = 0
+              and o.ID_TIPO_INSTANCIA = 1
+              and o.ID_CAMARA in (id_cam)
+              and O.ID_TIPO_OFICINA IN (1,2)
+              and not (fecha_asignacion = to_timestamp('01/03/2017 12:00:00,000000000 AM', 'DD/MM/YYYY HH12:MI:SS,FF AM')
+                                 and    C.comentarios = 'POR ACORDADA 1/2017 CSJN') --No quiero las falsas asignaciones
+              order by id_expediente, fecha_asignacion
+        ) where trunc(fecha_asignacion) between v_fechaDesde and v_fechaHasta;
+        commit;
+        v_fin := systimestamp;
+        inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
+    exception
+      when others then
+          rollback;
+          inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
+          v_fin := systimestamp;
+          inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
+    end generar_est_cambio_asignacion;
+
+/****************************************************/
 /*                  SALDO_AL_INICIO                 */
 /****************************************************/
 
