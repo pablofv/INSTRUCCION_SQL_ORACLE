@@ -7,6 +7,9 @@ create or replace package body est_paquete as
       v_inicio timestamp := systimestamp;
       v_fin timestamp;
     begin
+        delete from est_cambio_asignacion_exp;
+        commit; -- por si quedaron datos anteriores
+
         insert into est_cambio_asignacion_exp(N_FILA, TABLADESDE, ID_EXPEDIENTE, ID_OFICINA, ID_SECRETARIA, FECHA_ASIGNACION, CODIGO_TIPO_CAMBIO_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, ANIO_EXP, NUMERO_EXP)
         select *
         from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, tabladesde) n_fila,
@@ -37,6 +40,80 @@ create or replace package body est_paquete as
           v_fin := systimestamp;
           inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
     end generar_est_cambio_asignacion;
+
+/****************************************************/
+/*            GENERAR_EST_ACTUACION_EXP             */
+/****************************************************/
+  procedure generar_est_actuacion_exp(v_fechaDesde in timestamp, v_fechaHasta in timestamp, id_cam in int) as
+      v_proceso varchar2(30) := 'GENERAR_EST_ACTUACION_EXP';
+      v_inicio timestamp := systimestamp;
+      v_fin timestamp;
+  begin
+      delete from est_actuacion_exp;
+      commit;
+
+      /* CÓDIGOS DE SALIDA DE LAS CAUSAS DEL PERÍODO */
+      insert into est_actuacion_exp(origen_dato, num_consulta, radicacion, id_actuacion_exp, fecha_actuacion, codigo, id_oficina, id_expediente, id_expediente_origen)
+      select 'codigos_salida' origen_dato, 1, null radicacion, a.id_actuacion_exp, a.fecha_actuacion, ee.codigo_estado_expediente as codigo, est_busca_juzgado(a.id_oficina), a.id_expediente, e.id_expediente_origen
+      from actuacion_exp a join estado_expediente ee on a.id_estado_expediente = ee.id_estado_expediente
+                           join expediente e on a.id_expediente = e.id_expediente
+                           join est_total_a ta on a.id_expediente = ta.ta_idexp
+      where ee.CODIGO_ESTADO_EXPEDIENTE in (select codigo from est_codigos_salida where camara = id_cam)
+      and   est_busca_juzgado(a.id_oficina) = TA.TA_OFICINA
+      and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
+      and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
+      and   ta_camara = id_cam
+      and   trunc(a.fecha_actuacion) between v_fechaDesde and v_fechaHasta;
+      commit;
+
+      /* CÓDIGOS ETO DE LAS CAUSAS DEL PERÍODO */
+      insert into est_actuacion_exp(origen_dato, num_consulta, radicacion, id_actuacion_exp, fecha_actuacion, codigo, id_oficina, id_expediente, id_expediente_origen)
+      select 'códigos_ETO' origen_dato, 2, null radicacion, a.id_actuacion_exp, a.fecha_actuacion, ee.codigo_estado_expediente as codigo, est_busca_juzgado(a.id_oficina), a.id_expediente, e.id_expediente_origen
+      from actuacion_exp a join estado_expediente ee on a.id_estado_expediente = ee.id_estado_expediente
+                           join expediente e on a.id_expediente = e.id_expediente
+                           join est_total_a ta on a.id_expediente = ta.ta_idexp
+      where ee.CODIGO_ESTADO_EXPEDIENTE in ('ETO')
+      and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
+      and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
+      and   ta_camara = id_cam
+      and   trunc(a.fecha_actuacion) between v_fechaDesde and v_fechaHasta;
+      commit;
+
+      /* ASIGNACIONES ETO DE LAS CAUSAS DEL PERÍODO */
+      insert into est_actuacion_exp(origen_dato, num_consulta, radicacion, id_actuacion_exp, fecha_actuacion, codigo, id_oficina, id_expediente, id_expediente_origen)
+      select 'asignaciones_ETO', 3, c.tipo_radicacion, c.id_cambio_asignacion_exp, c.fecha_asignacion, c.codigo_tipo_cambio_asignacion as codigo, c.id_oficina, e.id_expediente, id_expediente_origen
+      from cambio_asignacion_exp c join expediente e on c.id_expediente in (e.id_expediente, e.id_expediente_origen)
+                                   join est_total_a ta on e.id_expediente = ta.ta_idexp
+      where c.CODIGO_TIPO_CAMBIO_ASIGNACION in ('ETO')
+      and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
+      and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
+      and   ta_camara = id_cam
+      and   trunc(c.fecha_asignacion) between v_fechaDesde and v_fechaHasta;
+      commit;
+
+      /* CIERRE MASIVO DE CAUSAS */
+      insert into est_actuacion_exp(origen_dato, num_consulta, radicacion, id_actuacion_exp, fecha_actuacion, codigo, id_oficina, id_expediente, id_expediente_origen)
+      select 'cierre_masivo', 4, null, i.id_informacion, i.fecha_informacion, ti.codigo_tipo_informacion, est_busca_juzgado(a.id_oficina), i.id_expediente, e.id_expediente_origen
+      from informacion i join tipo_informacion ti on i.id_tipo_informacion = ti.id_tipo_informacion
+                         join actuacion_exp a on i.id_informacion = a.id_informacion
+                         join expediente e on a.id_expediente = e.id_expediente
+                         join est_total_a ta on e.id_expediente = ta.ta_idexp
+      where ti.codigo_tipo_informacion = 'CMC' -- CMC CIERRE MASIVO DE CAUSAS, id 241 -- i.id_tipo_informacion = 241
+      and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
+      and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
+      and   ta_camara = id_cam
+      and   trunc(a.fecha_actuacion) between v_fechaDesde and v_fechaHasta;
+      commit;
+
+      v_fin := systimestamp;
+      inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
+  exception
+      when others then
+          rollback;
+          inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
+          v_fin := systimestamp;
+          inserta_duracion_procesos(camara => id_cam, nombre => v_proceso, inicio => v_inicio, fin => v_fin);
+    end GENERAR_EST_ACTUACION_EXP;
 
 /****************************************************/
 /*                  SALDO_AL_INICIO                 */
@@ -204,37 +281,12 @@ create or replace package body est_paquete as
                                                TA_IDTABLAORIGEN, TA_TABLAORIGEN, -- 1 -> cambio_asignacion 2 -> actuacion_exp
                                                TA_TIPO_DE_DATO, -- 0 -> existente 1 -> ingresado 2 -> reingresados
                                                TA_FECHA_PROCESO, TA_NUMERO_DE_EJECUCION, TA_NUMERO_ESTADISTICA, TA_MATERIA, TA_CAMARA)
-        SELECT idexp, rn, anio, numExp, id_juzgado, fecha_asignacion, codigo, objeto,
+        SELECT c.id_expediente, n_fila, anio_exp, numero_exp, EST_OFI_O_OFI_SUP(id_oficina), fecha_asignacion, codigo_tipo_cambio_asignacion, null objeto,
                1, /* -> finalizo originalmente está en 1 (quiere decir en trámite) y luego si la considero salida actualizo a 0 que es fuera de trámite */
                ID_CAMBIO_ASIGNACION_EXP, tabladesde,
-               case when rn = 1 then 1 when rn > 1 then 2 end, /* -> 1 = ingresados , 2 = reingresados */
-               v_inicio, v_numero_de_ejecucion, v_numero_estadistica, id_materia, id_cam
-        from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, tabladesde ) rn,  -- Particiona por Expte y Oficina ordenado por fecha de asignación, si la fecha es igual que ordene por id de la tabla proveniente
-              e.id_expediente idexp,
-              e.ANIO_EXPEDIENTE anio,
-              e.NUMERO_EXPEDIENTE numExp,
-              e.id_materia,
-              est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) id_juzgado,
-              c.FECHA_ASIGNACION,
-              c.CODIGO_TIPO_CAMBIO_ASIGNACION codigo,
-              null objeto,
-              c.tabladesde,
-              c.ID_CAMBIO_ASIGNACION_EXP
-              from (select 1 tabladesde, c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
-                    from CAMBIO_ASIGNACION_EXP c1
-                    union all
-                    select 2, a.ID_EXPEDIENTE, a.ID_OFICINA, a.id_secretaria, a.FECHA_actuacion, ee.codigo_estado_expediente, a.ID_actuacion_EXP, a.status
-                    from actuacion_exp a join estado_Expediente ee on a.id_estado_expediente = ee.id_estado_expediente
-                    where ee.codigo_estado_expediente = 'REI') c
-              JOIN EXPEDIENTE e on e.status = 0 and e.ID_EXPEDIENTE = c.ID_EXPEDIENTE and e.NATURALEZA_EXPEDIENTE in ('P')
-              JOIN OFICINA o on c.ID_OFICINA = o.ID_OFICINA
-              where c.status = 0
-              and o.ID_TIPO_INSTANCIA = 1
-              and o.ID_CAMARA in (id_cam)
-              and O.ID_TIPO_OFICINA IN (1,2) -- Toma solo los Juzgados y Secretarías.
-             )
-        where trunc(FECHA_ASIGNACION) between v_fechaDesde and v_fechahasta
-        order by anio, numexp, FECHA_ASIGNACION;
+               case when n_fila = 1 then 1 when n_fila > 1 then 2 end, /* -> 1 = ingresados , 2 = reingresados */
+               v_inicio, v_numero_de_ejecucion, v_numero_estadistica, e.id_materia, id_cam
+        from est_cambio_asignacion_exp c join expediente e on c.id_expediente = e.id_expediente;
         commit;
 --  Elimino todo lo anterior a 2013.
         est_paquete_instruccion.eliminarAsignacionesAntA2013;
@@ -371,39 +423,24 @@ create or replace package body est_paquete as
     begin
         select id_actuacion_exp, fecha_actuacion, codigo, radicacion into id_act, fechaSalida, codigoSalida, radicacion
         from (select ROW_NUMBER() over(partition by id_expediente order by fecha_actuacion desc) numero_fila, id_actuacion_exp, fecha_actuacion, codigo, radicacion
-              from (select null radicacion, a.id_actuacion_exp, a.fecha_actuacion, ee.codigo_estado_expediente as codigo, a.id_expediente
-                    from actuacion_exp a join estado_expediente ee on a.id_estado_expediente = ee.id_estado_expediente and ee.CODIGO_ESTADO_EXPEDIENTE in (select codigo from est_codigos_salida where camara = id_cam)
+              from (select radicacion, a.id_actuacion_exp, a.fecha_actuacion, a.codigo, a.id_expediente
+                    from est_actuacion_exp a 
+                    where a.id_expediente = idexp
+                    and   a.codigo in (select codigo from est_codigos_salida where camara = id_cam)
+                    and   a.fecha_actuacion between fechaDesde and fechaHasta
+                    and   a.id_oficina = est_busca_juzgado(oficina)
+                    union all
+                    select radicacion, a.id_actuacion_exp, a.fecha_actuacion, a.codigo, case when a.ID_EXPEDIENTE_ORIGEN is null then a.id_expediente else a.id_expediente_origen end
+                    from est_actuacion_exp a
+                    where idexp in (a.ID_EXPEDIENTE_ORIGEN, a.id_expediente)
+                    and   a.CODIGO in ('ETO')
+                    and   a.fecha_actuacion between fechaDesde and fechaHasta
+                    union all
+                    select radicacion, a.id_actuacion_exp, a.fecha_actuacion, a.codigo, a.id_expediente
+                    from EST_actuacion_exp a
                     where a.id_expediente = idexp
                     and   a.fecha_actuacion between fechaDesde and fechaHasta
-                    and   est_busca_juzgado(a.id_oficina) = est_busca_juzgado(oficina) --est_busca_juzgado(oficina)
-                    union all
-                    select null radicacion, a.id_actuacion_exp, a.fecha_actuacion, ee.codigo_estado_expediente as codigo, case when x.ID_EXPEDIENTE_ORIGEN is null then x.id_expediente else x.id_expediente_origen end
-                    from expediente x join actuacion_exp a on x.id_expediente = a.id_expediente
-                    join estado_expediente ee on a.id_estado_expediente = ee.id_estado_expediente
-                    where idexp in (x.ID_EXPEDIENTE_ORIGEN, x.id_expediente)
-                    and   ee.CODIGO_ESTADO_EXPEDIENTE in ('ETO')
-                    and   a.fecha_actuacion between fechaDesde and fechaHasta
-                  --  and   est_busca_juzgado(a.id_oficina) = est_busca_juzgado(oficina) --est_busca_juzgado(oficina)
-                    union all
-                    select c.tipo_radicacion, c.id_cambio_asignacion_exp, c.fecha_asignacion, c.codigo_tipo_cambio_asignacion as codigo, case when e.ID_EXPEDIENTE_ORIGEN is null then e.id_expediente else e.id_expediente_origen end
-                    from cambio_asignacion_exp c join expediente e on c.id_expediente = e.id_expediente
-                    where idexp in (e.id_expediente_origen, e.id_expediente)
-                    and   c.fecha_asignacion between fechaDesde and fechaHasta
-                  --  and   est_busca_juzgado(c.id_oficina) = est_busca_juzgado(oficina) --est_busca_juzgado(oficina)
-                    and   c.CODIGO_TIPO_CAMBIO_ASIGNACION in ('ETO')
-                    union all
-                    select null, i.id_informacion, i.fecha_informacion, ti.codigo_tipo_informacion, i.id_expediente
-                    from informacion i join tipo_informacion ti on i.id_tipo_informacion = ti.id_tipo_informacion
-                                       join actuacion_exp a on a.id_informacion = i.id_informacion
-                    where i.id_expediente = idexp
-                    and   i.fecha_informacion between fechaDesde and fechaHasta
-                    and   i.id_tipo_informacion = 241 -- 241 CMC CIERRE MASIVO DE CAUSAS.
-              /*      union all
-                    select c.tipo_radicacion, c.id_cambio_asignacion_exp, c.fecha_asignacion, c.codigo_tipo_cambio_asignacion as codigo, c.id_expediente
-                    from cambio_asignacion_exp c
-                    where c.id_expediente = idexp
-                    and   c.fecha_asignacion > fechaDesde
-                    and   c.fecha_asignacion < fechaHasta*/
+                    and   a.CODIGO in ('CMC') -- CIERRE MASIVO DE CAUSAS
                     ) cambio_actuacion
               ) r -- de resultado
         where numero_fila = 1;
