@@ -57,12 +57,13 @@ create or replace package body est_paquete as
       select 'codigos_salida' origen_dato, 1, null radicacion, a.id_actuacion_exp, a.fecha_actuacion, ee.codigo_estado_expediente as codigo, est_busca_juzgado(a.id_oficina), a.id_expediente, e.id_expediente_origen
       from actuacion_exp a join estado_expediente ee on a.id_estado_expediente = ee.id_estado_expediente
                            join expediente e on a.id_expediente = e.id_expediente
-                           join est_total_a ta on a.id_expediente = ta.ta_idexp
       where ee.CODIGO_ESTADO_EXPEDIENTE in (select codigo from est_codigos_salida where camara = id_cam)
-      and   est_busca_juzgado(a.id_oficina) = TA.TA_OFICINA
-      and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
-      and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
-      and   ta_camara = id_cam
+      and   a.id_expediente in (select ta_idexp
+                                from est_total_a ta
+                                where a.id_expediente = ta.ta_idexp
+                                and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
+                                and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
+                                and   ta_camara = id_cam)
       and   trunc(a.fecha_actuacion) between v_fechaDesde and v_fechaHasta;
       commit;
 
@@ -71,38 +72,47 @@ create or replace package body est_paquete as
       select 'códigos_ETO' origen_dato, 2, null radicacion, a.id_actuacion_exp, a.fecha_actuacion, ee.codigo_estado_expediente as codigo, est_busca_juzgado(a.id_oficina), a.id_expediente, e.id_expediente_origen
       from actuacion_exp a join estado_expediente ee on a.id_estado_expediente = ee.id_estado_expediente
                            join expediente e on a.id_expediente = e.id_expediente
-                           join est_total_a ta on a.id_expediente = ta.ta_idexp
       where ee.CODIGO_ESTADO_EXPEDIENTE in ('ETO')
-      and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
-      and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
-      and   ta_camara = id_cam
+      and   a.id_expediente in (select ta_idexp
+                                from est_total_a ta
+                                where a.id_expediente = ta.ta_idexp
+                                and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
+                                and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
+                                and   ta_camara = id_cam)
       and   trunc(a.fecha_actuacion) between v_fechaDesde and v_fechaHasta;
       commit;
 
       /* ASIGNACIONES ETO DE LAS CAUSAS DEL PERÍODO */
       insert into est_actuacion_exp(origen_dato, num_consulta, radicacion, id_actuacion_exp, fecha_actuacion, codigo, id_oficina, id_expediente, id_expediente_origen)
       select 'asignaciones_ETO', 3, c.tipo_radicacion, c.id_cambio_asignacion_exp, c.fecha_asignacion, c.codigo_tipo_cambio_asignacion as codigo, c.id_oficina, e.id_expediente, id_expediente_origen
-      from cambio_asignacion_exp c join expediente e on c.id_expediente in (e.id_expediente, e.id_expediente_origen)
-                                   join est_total_a ta on e.id_expediente = ta.ta_idexp
+      from cambio_asignacion_exp c join expediente e on c.id_expediente = e.id_expediente
       where c.CODIGO_TIPO_CAMBIO_ASIGNACION in ('ETO')
-      and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
-      and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
-      and   ta_camara = id_cam
+      and   c.id_expediente in (select e1.id_expediente
+                                from est_total_a ta, expediente e1
+                                where ta.ta_idexp in (e1.id_expediente, e1.id_expediente_origen)
+                                and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
+                                and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
+                                and   ta_camara = id_cam)
       and   trunc(c.fecha_asignacion) between v_fechaDesde and v_fechaHasta;
       commit;
 
       /* CIERRE MASIVO DE CAUSAS */
       insert into est_actuacion_exp(origen_dato, num_consulta, radicacion, id_actuacion_exp, fecha_actuacion, codigo, id_oficina, id_expediente, id_expediente_origen)
-      select 'cierre_masivo', 4, null, i.id_informacion, i.fecha_informacion, ti.codigo_tipo_informacion, est_busca_juzgado(a.id_oficina), i.id_expediente, e.id_expediente_origen
+      select 'cierre_masivo', 4, null, i.id_informacion, i.fecha_informacion, ti.codigo_tipo_informacion,
+                                            est_busca_juzgado((select id_oficina
+                                                              from actuacion_exp a
+                                                              where a.id_informacion = i.id_informacion
+                                                              group by id_oficina)), i.id_expediente, e.id_expediente_origen
       from informacion i join tipo_informacion ti on i.id_tipo_informacion = ti.id_tipo_informacion
-                         join actuacion_exp a on i.id_informacion = a.id_informacion
-                         join expediente e on a.id_expediente = e.id_expediente
-                         join est_total_a ta on e.id_expediente = ta.ta_idexp
+                         join expediente e on i.id_expediente = e.id_expediente
       where ti.codigo_tipo_informacion = 'CMC' -- CMC CIERRE MASIVO DE CAUSAS, id 241 -- i.id_tipo_informacion = 241
-      and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
-      and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
-      and   ta_camara = id_cam
-      and   trunc(a.fecha_actuacion) between v_fechaDesde and v_fechaHasta;
+      and   i.id_expediente in (select ta_idexp
+                                from est_total_a ta
+                                where i.id_expediente = ta.ta_idexp
+                                and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
+                                and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
+                                and   ta_camara = id_cam)
+      and   trunc(i.fecha_informacion) between v_fechaDesde and v_fechaHasta;
       commit;
 
       v_fin := systimestamp;
