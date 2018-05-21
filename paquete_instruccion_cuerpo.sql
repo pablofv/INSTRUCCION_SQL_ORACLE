@@ -7,13 +7,17 @@ create or replace package body est_paquete_instruccion as
             /* 1-> error, 0-> correcto */
             raise error_enEjecutarProceso;
         else
+            est_paquete.generar_est_cambio_asignacion(v_fechaDesde => desde, v_fechaHasta => hasta, id_cam => N_CAMARA);
             /* En instrucción empezaremos sin expedientes en trámite */
+            
             est_paquete.ingresados_y_reingresados(V_FECHADESDE => desde, V_FECHAHASTA => hasta, id_cam => N_CAMARA);
             --ELIMINAMOS TODO LO QUE NO SEA UN MOVIMIENTO DE INSTRUCCIÓN
          --   eliminarAsignacionesAntA2013;
             dejarSoloInstruccion2;
             eliminarAnterioresA2008;
             eliminarFalsasAsignaciones;
+            
+            est_paquete.generar_est_actuacion_exp(v_fechaDesde => desde, v_fechaHasta => hasta, id_cam => N_CAMARA);
             est_paquete.agrego_delito(id_cam => N_CAMARA);
             est_paquete.calcula_salidos(finPeriodo => hasta, id_cam => N_CAMARA);
         end if;
