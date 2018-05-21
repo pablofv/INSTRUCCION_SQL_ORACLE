@@ -12,7 +12,7 @@ create or replace package body est_paquete as
 
         insert into est_cambio_asignacion_exp(N_FILA, TABLADESDE, ID_EXPEDIENTE, ID_OFICINA, ID_SECRETARIA, FECHA_ASIGNACION, CODIGO_TIPO_CAMBIO_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, ANIO_EXP, NUMERO_EXP)
         select *
-        from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_ofi_o_ofi_sup(case when id_secretaria is null then c.id_oficina else c.id_secretaria end) order by FECHA_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, tabladesde) n_fila,
+        from (select ROW_NUMBER() over(partition by c.ID_EXPEDIENTE, est_busca_juzgado(c.id_oficina) order by FECHA_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, tabladesde) n_fila,
                      TABLADESDE, c.ID_EXPEDIENTE, c.ID_OFICINA, ID_SECRETARIA, FECHA_ASIGNACION, CODIGO_TIPO_CAMBIO_ASIGNACION, ID_CAMBIO_ASIGNACION_EXP, ANIO_EXPEDIENTE, NUMERO_EXPEDIENTE
               from (select COMENTARIOS, 1 tabladesde, c1.ID_EXPEDIENTE, c1.ID_OFICINA, c1.id_secretaria, c1.FECHA_ASIGNACION, c1.CODIGO_TIPO_CAMBIO_ASIGNACION, c1.ID_CAMBIO_ASIGNACION_EXP, c1.status
                     from CAMBIO_ASIGNACION_EXP c1
@@ -73,9 +73,9 @@ create or replace package body est_paquete as
       from actuacion_exp a join estado_expediente ee on a.id_estado_expediente = ee.id_estado_expediente
                            join expediente e on a.id_expediente = e.id_expediente
       where ee.CODIGO_ESTADO_EXPEDIENTE in ('ETO')
-      and   a.id_expediente in (select ta_idexp
-                                from est_total_a ta
-                                where a.id_expediente = ta.ta_idexp
+      and   a.id_expediente in (select e1.id_expediente
+                                from est_total_a ta, expediente e1
+                                where ta.ta_idexp in (e1.id_expediente, e1.id_expediente_origen)
                                 and   ta.ta_numero_estadistica = v_numero_estadistica -- quiero solo la estadística actual en proceso
                                 and   ta_finalizo = 1 -- quiero solo las causas que siguen activas
                                 and   ta_camara = id_cam)
@@ -299,7 +299,7 @@ create or replace package body est_paquete as
         from est_cambio_asignacion_exp c join expediente e on c.id_expediente = e.id_expediente;
         commit;
 --  Elimino todo lo anterior a 2013.
-        est_paquete_instruccion.eliminarAsignacionesAntA2013;
+   --     est_paquete_instruccion.eliminarAsignacionesAntA2013;
 -- Agrego el saldo que quedó del proceso SQL.
         if id_cam = 9 and v_fechaDesde = to_timestamp('01/01/2013', 'dd/mm/yyyy') then
             saldo_multibase(v_camara => id_cam, v_numero_ejecucion => v_numero_de_ejecucion, v_numero_estadistica => v_numero_estadistica);
@@ -652,14 +652,17 @@ create or replace package body est_paquete as
 /***************************************************/
 
     procedure dejarMateriasPenales(camara in int) is
+      v_proceso varchar2(30) := 'dejarMateriasPenales';
     begin
         /* BORRO LOS EXPEDIENTES DE CÓRDOBA -O LA CÁMARA QUE QUIERA- QUE NO SEAN DE MATERIA PENAL -LAS INCLUÍDAS EN EL VECTOR MP */
         delete from est_total_a
         where ta_camara = camara
-        and   ta_materia not in (mp(1), mp(2), mp(3), mp(4));
+        and   ta_numero_de_ejecucion = v_numero_de_ejecucion
+        and   ta_materia not in (9,11);
         commit;
     exception
       when others then
         rollback;
+        inserta_error(m_error => DBMS_UTILITY.format_error_stack, nombre_proceso => v_proceso);
     end dejarMateriasPenales;
 end est_paquete;
