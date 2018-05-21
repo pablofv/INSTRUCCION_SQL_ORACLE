@@ -48,6 +48,7 @@ create or replace package est_paquete as
     v_numero_estadistica int;
 
     procedure generar_est_cambio_asignacion(v_fechaDesde in timestamp, v_fechaHasta in timestamp, id_cam in int);
+    procedure generar_est_actuacion_exp(v_fechaDesde in timestamp, v_fechaHasta in timestamp, id_cam in int);
     procedure saldo_al_inicio(v_fechahasta in timestamp, id_cam in int);
     procedure saldo_multibase(v_camara in int, v_numero_ejecucion in int, v_numero_estadistica in int);
     procedure ingresados_y_reingresados(v_fechaDesde in timestamp, v_fechahasta in timestamp, id_cam in int);
