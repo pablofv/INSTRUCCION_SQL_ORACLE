@@ -13,8 +13,8 @@ declare
         select *
         BULK COLLECT INTO v_tablas
         from user_objects
-        where upper(object_name) in ('EST_SALIDOS', 'EST_LOG', 'EST_DURACION_PROCESO', 'EST_CODIGOS_SALIDA', 'EST_CAMBIO_ASIGNACION_EXP',
-                                     'EST_ERRORES', 'EST_EJECUCIONES', 'EST_VARIABLE_ESTADISTICA', 'EST_SECFECHAPROCESO', 'EST_TOTAL_A')
+        where upper(object_name) in ('EST_SALIDOS', 'EST_DURACION_PROCESO', 'EST_CODIGOS_SALIDA', 'EST_CAMBIO_ASIGNACION_EXP', 'EST_SECFECHAPROCESO',
+                                     'EST_ACTUACION_EXP', 'EST_EJECUCIONES', 'EST_VARIABLE_ESTADISTICA', 'EST_TOTAL_A', 'EST_LOG', 'EST_ERRORES')
         order by Object_Id desc;
         if v_tablas.last > 0 then -- encontró objetos creados
             ultimo_elemento := v_tablas.last;
@@ -53,17 +53,33 @@ begin
                                                     )';
 
     execute immediate 'create table est_cambio_asignacion_exp(tablaDesde int,
-                                           id_expediente int,
-                                           id_oficina int,
-                                           id_secretaria int,
-                                           fecha_asignacion timestamp,
-                                           codigo_tipo_cambio_asignacion varchar2(3 byte),
-                                           id_cambio_asignacion_exp int,
-                                           n_fila int,
-                                           anio_exp int,
-                                           numero_exp int,
-                                           CONSTRAINT CP_EST_CAMBIO PRIMARY KEY (tablaDesde, id_cambio_asignacion_exp))';
+                                                              id_expediente int,
+                                                              id_oficina int,
+                                                              id_secretaria int,
+                                                              fecha_asignacion timestamp,
+                                                              codigo_tipo_cambio_asignacion varchar2(3 byte),
+                                                              id_cambio_asignacion_exp int,
+                                                              n_fila int,
+                                                              anio_exp int,
+                                                              numero_exp int,
+                                                              CONSTRAINT CP_EST_CAMBIO PRIMARY KEY (tablaDesde, id_cambio_asignacion_exp)
+                                                              )';
     execute immediate 'comment on column est_cambio_asignacion_exp.tablaDesde is ''De donde proviene el dato: 1 => cambio; 2 = Actuación.''';
+    execute immediate 'create index uq_fecha_asignacion on est_cambio_asignacion_exp(fecha_asignacion)';
+
+    execute immediate 'CREATE TABLE est_actuacion_exp(ORIGEN_DATO VARCHAR2(16 BYTE),
+                                                      NUM_CONSULTA INTEGER,
+                                                      RADICACION VARCHAR2(10 CHAR),
+                                                      ID_ACTUACION_EXP NUMBER(10,0),
+                                                      FECHA_ACTUACION TIMESTAMP (6),
+                                                      ID_OFICINA INTEGER,
+                                                      CODIGO VARCHAR2(10 CHAR),
+                                                      ID_EXPEDIENTE INTEGER,
+                                                      ID_EXPEDIENTE_ORIGEN INTEGER,
+                                                      CONSTRAINT CP_est_actuacion PRIMARY KEY (num_consulta, id_actuacion_exp)
+                                                      )';
+    execute immediate 'comment on column est_actuacion_exp.num_consulta is ''El número del select de donde provino el dato.''';
+    execute immediate 'create index uq_fecha_actuacion on est_actuacion_exp(FECHA_ACTUACION)';
 
     execute immediate  'CREATE TABLE EST_TOTAL_A(TA_CLAVE INT NOT NULL,
                                                  TA_IDEXP NUMBER(10,0) NOT NULL ENABLE,
@@ -156,6 +172,8 @@ begin
                               :new.SAL_CLAVE := Cuenta_Cantidad + filas;
                           end before each row;
                        end tr_inserta_clave_SALIDOS;';
+
+    execute immediate 'create unique index uq_fk_entre_las_tablas on est_salidos(sal_referencia_ingresado)';
 
     execute immediate 'CREATE TABLE EST_LOG(ANT_IDE NUMBER(38,0),
                                             IDE NUMBER(38,0),
